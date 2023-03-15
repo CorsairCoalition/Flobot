@@ -1,9 +1,9 @@
 {
 	"gameConfig": {
-		"endpoint": "wss://botws.generals.io/",
 		"userId": "RANDOMLY_GENERATED_STRING",
 		"username": "[Bot] Floatbot",
 		"customGameId": "floatbot",
+		"customGameSpeed": 4,
 		"warCry": [
 			"Beep bop blop!",
 			"Learn more at github.com/CorsairCoalition/Flobot"
@@ -11,6 +11,7 @@
 	},
 	"redisConfig": {
 		"HOST": "",
+		"PORT": 443,
 		"USERNAME": "",
 		"PASSWORD": ""
 	}

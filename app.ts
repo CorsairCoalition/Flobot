@@ -1,10 +1,12 @@
 const { Command } = require('commander')
 import Redis = require('redis')
 import io = require('socket.io-client')
-
 import fs = require('node:fs')
-
 import Bot = require('./scripts/bot')
+
+const GAME_SERVER_URL = 'wss://botws.generals.io/'
+const DEFAULT_NUMBER_OF_GAMES = 3
+const DEFAULT_CUSTOM_GAME_SPEED = 4
 
 // program flow setup
 
@@ -14,7 +16,9 @@ const gameConfig = config.gameConfig
 const redisConfig = config.redisConfig
 // create a unique botId by hashing gameConfig.userId
 gameConfig.botId = require('crypto').createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
+gameConfig.customGameSpeed = gameConfig.customGameSpeed || DEFAULT_CUSTOM_GAME_SPEED
 const REDIS_CHANNEL = 'flobot-' + gameConfig.botId
+redisConfig.PORT = redisConfig.PORT || 443
 
 interface Log {
 	stdout: (msg: string) => void,
@@ -71,7 +75,7 @@ let gameJoined: boolean = false
 let redisClient = undefined
 if (redisConfig.HOST !== undefined) {
 	redisClient = Redis.createClient({
-		url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:443`,
+		url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:${redisConfig.PORT}}`,
 		socket: {
 			tls: true,
 			servername: redisConfig.HOST,
@@ -85,7 +89,7 @@ if (redisConfig.HOST !== undefined) {
 
 // socket.io setup
 
-let socket = io(gameConfig.endpoint, {
+let socket = io(GAME_SERVER_URL, {
 	rejectUnauthorized: false,
 	transports: ['websocket']
 })
@@ -100,7 +104,7 @@ program
 	.name(pkg.name)
 	.version(pkg.version)
 	.description(pkg.description)
-	.option('-n, --number-of-games <number>', 'number of games to play', parseInt, 3)
+	.option('-n, --number-of-games <number>', 'number of games to play', DEFAULT_NUMBER_OF_GAMES)
 	.option('-d, --debug', 'enable debugging', false)
 	.option('-s, --set-username', `attempt to set username: ${gameConfig.username}`, false)
 	.showHelpAfterError()
@@ -129,6 +133,7 @@ program
 
 program.parse()
 const options = program.opts()
+options.numberOfGames = parseInt(options.numberOfGames) || DEFAULT_NUMBER_OF_GAMES
 
 log.debug("debugging enabled")
 log.debug("gameConfig: ")
