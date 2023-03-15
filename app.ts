@@ -4,11 +4,11 @@ import io = require('socket.io-client')
 import fs = require('node:fs')
 import Bot = require('./scripts/bot')
 
+// configuration
+
 const GAME_SERVER_URL = 'wss://botws.generals.io/'
 const DEFAULT_NUMBER_OF_GAMES = 3
 const DEFAULT_CUSTOM_GAME_SPEED = 4
-
-// program flow setup
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
@@ -19,6 +19,8 @@ gameConfig.botId = require('crypto').createHash('sha256').update(gameConfig.user
 gameConfig.customGameSpeed = gameConfig.customGameSpeed || DEFAULT_CUSTOM_GAME_SPEED
 const REDIS_CHANNEL = 'flobot-' + gameConfig.botId
 redisConfig.PORT = redisConfig.PORT || 443
+
+// program flow setup
 
 interface Log {
 	stdout: (msg: string) => void,
@@ -75,7 +77,7 @@ let gameJoined: boolean = false
 let redisClient = undefined
 if (redisConfig.HOST !== undefined) {
 	redisClient = Redis.createClient({
-		url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:${redisConfig.PORT}}`,
+		url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:${redisConfig.PORT}`,
 		socket: {
 			tls: true,
 			servername: redisConfig.HOST,
