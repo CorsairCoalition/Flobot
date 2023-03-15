@@ -32,14 +32,22 @@ const log: Log = {
 
 process.once('SIGINT', async (code) => {
 	log.stderr('Interrupted. Exiting gracefully.')
+	if (gameJoined) {
+		await socket.emit('leave_game')
+		log.debug('sent: leave_game')
+	}
 	await socket.disconnect()
 	redisClient.quit()
 })
 
 process.once('SIGTERM', async (code) => {
 	log.stderr('Terminated. Exiting gracefully.')
+	if (gameJoined) {
+		socket.emit('leave_game')
+		log.debug('sent: leave_game')
+	}
+	await socket.disconnect()
 	redisClient.quit()
-	socket.disconnect()
 })
 
 // data structures and definitions
@@ -56,6 +64,7 @@ let playerIndex: number
 let replay_id: string = ""
 let usernames: string[]
 let currentGameNumber: number = 0
+let gameJoined: boolean = false
 
 // redis setup
 
@@ -191,17 +200,13 @@ socket.on('game_update', (data: object) => {
 socket.on('game_lost', (data: { killer: string }) => {
 	log.stdout(`[game_lost] ${replay_id}, killer: ${usernames[data.killer]}`)
 	log.redis(`game_lost ${replay_id}, killer: ${usernames[data.killer]}`)
-	socket.emit('leave_game')
-	bot = undefined
-	setTimeout(joinGame, 1000)
+	leaveGame()
 })
 
 socket.on('game_won', () => {
 	log.stdout(`[game_won] ${replay_id}`)
 	log.redis(`game_won ${replay_id}`)
-	socket.emit('leave_game')
-	bot = undefined
-	setTimeout(joinGame, 1000)
+	leaveGame()
 })
 
 socket.on('chat_message', (chat_room: string, data: { username: string, playerIndex: number, text: string }) => {
@@ -218,12 +223,6 @@ socket.on('queue_update', (data) => {
 
 function joinGame() {
 	currentGameNumber++
-	if (currentGameNumber > options.numberOfGames) {
-		log.stdout(`Played ${options.numberOfGames} games. Exiting.`)
-		socket.close()
-		return
-	}
-
 	log.stdout(`[joining] game ${currentGameNumber} of ${options.numberOfGames}`)
 
 	switch (gameType) {
@@ -243,5 +242,21 @@ function joinGame() {
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
 			log.redis(`joined custom: ${gameConfig.customGameId}`)
 			break
+	}
+	gameJoined = true
+}
+
+function leaveGame() {
+	socket.emit('leave_game')
+	log.debug('sent: leave_game')
+	gameJoined = false
+	bot = undefined
+
+	if (currentGameNumber => options.numberOfGames) {
+		log.stdout(`Played ${options.numberOfGames} games. Exiting.`)
+		socket.close()
+	}
+	else {
+		setTimeout(joinGame, 1000)
 	}
 }
