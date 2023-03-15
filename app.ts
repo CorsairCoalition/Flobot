@@ -99,7 +99,10 @@ program
 program
 	.command('ffa')
 	.description('free for all')
-	.action(() => gameType = GameType.FFA)
+	.action(() => {
+		gameType = GameType.FFA
+		gameConfig.customGameId = null
+	})
 
 program
 	.command('1v1')
@@ -206,6 +209,13 @@ socket.on('chat_message', (chat_room: string, data: { username: string, playerIn
 		log.redis(`chat_message [${data.username}] ${data.text}`)
 });
 
+socket.on('queue_update', (data) => {
+	if (!data.isForcing)
+		setTimeout(() => socket.emit('set_force_start', gameConfig.customGameId, true), 1000)
+	if (gameType === GameType.Custom)
+		socket.emit('set_custom_options', gameConfig.customGameId, { "game_speed": gameConfig.customGameSpeed })
+})
+
 function joinGame() {
 	currentGameNumber++
 	if (currentGameNumber > options.numberOfGames) {
@@ -219,7 +229,6 @@ function joinGame() {
 	switch (gameType) {
 		case GameType.FFA:
 			socket.emit('play', gameConfig.userId)
-			setTimeout(() => socket.emit('set_force_start', null, true), 10000)
 			log.stdout('[joined] FFA')
 			log.redis('joined FFA')
 			break
@@ -230,7 +239,7 @@ function joinGame() {
 			break
 		case GameType.Custom:
 			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
-			setTimeout(() => socket.emit('set_force_start', gameConfig.customGameId, true), 10000)
+			socket.emit('set_custom_options', gameConfig.customGameId, { "game_speed": gameConfig.customGameSpeed })
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
 			log.redis(`joined custom: ${gameConfig.customGameId}`)
 			break
