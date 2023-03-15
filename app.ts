@@ -51,6 +51,11 @@ const enum GameType {
 }
 
 let gameType: GameType
+let bot: Bot
+let playerIndex: number
+let replay_id: string = ""
+let usernames: string[]
+let currentGameNumber: number = 0
 
 // redis setup
 
@@ -65,6 +70,8 @@ if (redisConfig.HOST !== undefined) {
 	})
 	redisClient.on('error', (error: Error) => console.error('[Redis]', error))
 	redisClient.connect()
+
+	// TODO: deconflict with Redis pub/sub to ensure globally unique botId
 }
 
 // socket.io setup
@@ -84,7 +91,7 @@ program
 	.name(pkg.name)
 	.version(pkg.version)
 	.description(pkg.description)
-	.option('-n, --number <number>', 'number of games to play', parseInt, 3)
+	.option('-n, --number-of-games <number>', 'number of games to play', parseInt, 3)
 	.option('-d, --debug', 'enable debugging', false)
 	.option('-s, --set-username', `attempt to set username: ${gameConfig.username}`, false)
 	.showHelpAfterError()
@@ -114,13 +121,7 @@ const options = program.opts()
 log.debug("debugging enabled")
 log.debug(gameConfig)
 
-// gameplay setup
-
-let bot: Bot
-let playerIndex: number
-let replay_id: string = ""
-let usernames: string[]
-let numberOfGames = options.number
+// handle game events
 
 socket.on('connect', async () => {
 	log.stdout(`[connected] ${gameConfig.username}`)
@@ -188,7 +189,7 @@ socket.on('game_lost', (data: { killer: string }) => {
 	log.redis(`game_lost ${replay_id}, killer: ${usernames[data.killer]}`)
 	socket.emit('leave_game')
 	bot = undefined
-	playAgain()
+	setTimeout(joinGame, 1000)
 })
 
 socket.on('game_won', () => {
@@ -196,7 +197,7 @@ socket.on('game_won', () => {
 	log.redis(`game_won ${replay_id}`)
 	socket.emit('leave_game')
 	bot = undefined
-	playAgain()
+	setTimeout(joinGame, 1000)
 })
 
 socket.on('chat_message', (chat_room: string, data: { username: string, playerIndex: number, text: string }) => {
@@ -205,6 +206,15 @@ socket.on('chat_message', (chat_room: string, data: { username: string, playerIn
 });
 
 function joinGame() {
+	currentGameNumber++
+	if (currentGameNumber > options.numberOfGames) {
+		log.stdout(`Played ${options.numberOfGames} games. Exiting.`)
+		socket.close()
+		return
+	}
+
+	log.stdout(`[joining] game ${currentGameNumber} of ${options.numberOfGames}`)
+
 	switch (gameType) {
 		case GameType.FFA:
 			socket.emit('play', gameConfig.userId)
@@ -224,14 +234,5 @@ function joinGame() {
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
 			log.redis(`joined custom: ${gameConfig.customGameId}`)
 			break
-	}
-}
-
-function playAgain() {
-	numberOfGames--
-	if (numberOfGames > 0) {
-		setTimeout(() => joinGame(), 1000)
-	} else {
-		socket.disconnect()
 	}
 }
