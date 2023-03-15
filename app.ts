@@ -230,10 +230,11 @@ socket.on('chat_message', (chat_room: string, data: { username: string, playerIn
 
 let queueNumPlayers: number = 0
 socket.on('queue_update', (data) => {
-	if (!data.isForcing) {
-		socket.emit('set_force_start', gameConfig.customGameId, true)
-		log.debug('sent: set_force_start')
-	}
+	if (!data.isForcing)
+		setTimeout(() => {
+			socket.emit('set_force_start', gameConfig.customGameId, true)
+			log.debug('sent: set_force_start')
+		}, 1000)
 	// if we are the first player in the queue and number of players has changed, set the game speed
 	if (gameType === GameType.Custom
 		&& data.usernames[0] === gameConfig.username
