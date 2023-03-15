@@ -3,20 +3,18 @@ import Redis = require('redis')
 import io = require('socket.io-client')
 
 import fs = require('node:fs')
-import util = require('node:util')
 
 import Bot = require('./scripts/bot')
 
 // program flow setup
 
-let gameType: GameType
-let customGameId: string
-
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
 const gameConfig = config.gameConfig
 const redisConfig = config.redisConfig
-const REDIS_CHANNEL = 'flobot-' + gameConfig.username
+// create a unique botId by hashing gameConfig.userId
+gameConfig.botId = require('crypto').createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
+const REDIS_CHANNEL = 'flobot-' + gameConfig.botId
 
 interface Log {
 	stdout: (msg: string) => void,
@@ -52,6 +50,8 @@ const enum GameType {
 	Custom
 }
 
+let gameType: GameType
+
 // redis setup
 
 let redisClient = undefined
@@ -68,6 +68,7 @@ if (redisConfig.HOST !== undefined) {
 }
 
 // socket.io setup
+
 let socket = io(gameConfig.endpoint, {
 	rejectUnauthorized: false,
 	transports: ['websocket']
@@ -122,7 +123,7 @@ let usernames: string[]
 let numberOfGames = options.number
 
 socket.on('connect', async () => {
-	log.stdout(`connected as ${gameConfig.username}`)
+	log.stdout(`[connected] ${gameConfig.username}`)
 	if (options.setUsername) {
 		socket.emit('set_username', gameConfig.userId, gameConfig.username)
 	}
