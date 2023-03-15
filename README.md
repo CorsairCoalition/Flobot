@@ -18,6 +18,10 @@ $ tsc # compile app.ts to app.js
 
 Rename `config.json.example` to `config.json` and make updates.
 
+1. Change `userId` to a random string.
+2. Change `username` to the bot's name. According to the developer documentation, bot names must start with `[Bot]`.
+3. On first run, use the `--set-username` flag to set the desired username. This flag is not required for subsequent runs.
+
 ## Usage
 
 ```

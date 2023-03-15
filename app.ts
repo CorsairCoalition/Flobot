@@ -148,8 +148,9 @@ socket.on('disconnect', async (reason: string) => {
 
 socket.on('error_set_username', (message: string) => {
 	if (message === '')
-		message = `username set to ${gameConfig.username}`
-	log.stdout(`[error_set_username] ${message}`)
+		log.stdout(`[set_username] username set to ${gameConfig.username}`)
+	else
+		log.stdout(`[error_set_username] ${message}`)
 })
 
 socket.on('game_start', (data: { playerIndex: number; replay_id: string; usernames: string[]; chat_room: string; }) => {
