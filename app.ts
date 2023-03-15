@@ -70,6 +70,7 @@ let playerIndex: number
 let replay_id: string = ""
 let usernames: string[]
 let currentGameNumber: number = 0
+let numberOfGames: number
 let gameJoined: boolean = false
 
 // redis setup
@@ -229,11 +230,10 @@ socket.on('chat_message', (chat_room: string, data: { username: string, playerIn
 
 let queueNumPlayers: number = 0
 socket.on('queue_update', (data) => {
-	if (!data.isForcing)
-		setTimeout(() => {
-			socket.emit('set_force_start', gameConfig.customGameId, true)
-			log.debug('sent: set_force_start')
-		}, 1000)
+	if (!data.isForcing) {
+		socket.emit('set_force_start', gameConfig.customGameId, true)
+		log.debug('sent: set_force_start')
+	}
 	// if we are the first player in the queue and number of players has changed, set the game speed
 	if (gameType === GameType.Custom
 		&& data.usernames[0] === gameConfig.username
@@ -246,7 +246,7 @@ socket.on('queue_update', (data) => {
 				"game_speed": gameConfig.customGameSpeed
 			})
 			log.debug('sent: set_custom_options')
-		}, 1000)
+		}, 100)
 	queueNumPlayers = data.numPlayers
 })
 
@@ -267,7 +267,14 @@ function joinGame() {
 			break
 		case GameType.Custom:
 			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
-			setTimeout(() => socket.emit('set_custom_options', gameConfig.customGameId, { "game_speed": gameConfig.customGameSpeed }), 100)
+			setTimeout(() => {
+				socket.emit(
+					'set_custom_options',
+					gameConfig.customGameId, {
+					"game_speed": gameConfig.customGameSpeed
+				})
+				log.debug('sent: set_custom_options')
+			}, 100)
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
 			log.redis(`joined custom: ${gameConfig.customGameId}`)
 			break
@@ -281,11 +288,11 @@ function leaveGame() {
 	gameJoined = false
 	bot = undefined
 
-	if (currentGameNumber => options.numberOfGames) {
+	if (currentGameNumber >= options.numberOfGames) {
 		log.stdout(`Played ${options.numberOfGames} games. Exiting.`)
 		socket.close()
 	}
 	else {
-		setTimeout(joinGame, 1000)
+		setTimeout(joinGame, 100)
 	}
 }
