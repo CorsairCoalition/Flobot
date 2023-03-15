@@ -1,5 +1,8 @@
 # Config
-config.js
+config.json
+
+# tsc output
+app.js
 
 # Logs
 logs

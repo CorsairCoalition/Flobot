@@ -1,0 +1,14 @@
+{
+	"gameConfig": {
+		"endpoint": "wss://botws.generals.io/",
+		"userId": "d0iVXBXgP",
+		"username": "Floatbot",
+		"customGameId": "floatbot",
+		"warCry": "Beep bop blop!"
+	},
+	"redisConfig": {
+		"HOST": "",
+		"USERNAME": "",
+		"PASSWORD": ""
+	}
+}

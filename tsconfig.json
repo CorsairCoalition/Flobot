@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"module": "CommonJS",
+		"target": "ES2022",
+		"removeComments": true,
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+	},
+	"exclude": [
+		"node_modules",
+		"**/*.spec.ts"
+	],
+	"$schema": "https://json.schemastore.org/tsconfig"
+}
