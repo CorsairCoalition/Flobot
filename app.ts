@@ -131,7 +131,10 @@ program.parse()
 const options = program.opts()
 
 log.debug("debugging enabled")
+log.debug("gameConfig: ")
 log.debug(gameConfig)
+log.debug("options: ")
+log.debug(options)
 
 // handle game events
 
@@ -139,6 +142,7 @@ socket.on('connect', async () => {
 	log.stdout(`[connected] ${gameConfig.username}`)
 	if (options.setUsername) {
 		socket.emit('set_username', gameConfig.userId, gameConfig.username)
+		log.debug(`sent: set_username, ${gameConfig.userId}, ${gameConfig.username}`)
 	}
 	log.redis(`connected ${gameConfig.username}`)
 	joinGame()
@@ -184,6 +188,7 @@ socket.on('game_start', (data: { playerIndex: number; replay_id: string; usernam
 	for (let i = 0; i < gameConfig.warCry.length; i++) {
 		later(1000 * i).then(() => {
 			socket.emit('chat_message', data.chat_room, gameConfig.warCry[i])
+			log.debug(`sent: [chat_message] ${gameConfig.warCry[i]}`)
 		})
 	}
 })
@@ -192,6 +197,7 @@ socket.on('game_update', (data: object) => {
 	if (bot === undefined) {
 		// create the bot on first game update
 		bot = new Bot(socket, playerIndex, data)
+		log.debug('recv: first game update')
 	} else {
 		bot.update(data)
 	}
@@ -254,7 +260,7 @@ function joinGame() {
 			break
 		case GameType.Custom:
 			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
-			socket.emit('set_custom_options', gameConfig.customGameId, { "game_speed": gameConfig.customGameSpeed })
+			setTimeout(() => socket.emit('set_custom_options', gameConfig.customGameId, { "game_speed": gameConfig.customGameSpeed }), 100)
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
 			log.redis(`joined custom: ${gameConfig.customGameId}`)
 			break
