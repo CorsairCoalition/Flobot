@@ -6,15 +6,22 @@ This bot is an AI agent that competes on the [generals.io bot server](https://bo
 
 See [developer documentation](https://dev.generals.io/).
 
+## Compilation
+
+```sh
+$ npm clean-install # install required packages
+$ npm i -g typescript # install typescript compiler, tsc, globally
+$ tsc # compile app.ts to app.js
+```
+
 ## Configuration
 
-Rename `config.js.example` to `config.js` and make updates.
+Rename `config.json.example` to `config.json` and make updates.
 
-
-## Run
+## Usage
 
 ```
-	Usage: ts-node app.ts [options] [command]
+	Usage: node app.js [options] [command]
 
 	Options:
 	-V, --version          output the version number
