@@ -214,11 +214,27 @@ socket.on('chat_message', (chat_room: string, data: { username: string, playerIn
 		log.redis(`chat_message [${data.username}] ${data.text}`)
 });
 
+let queueNumPlayers: number = 0
 socket.on('queue_update', (data) => {
 	if (!data.isForcing)
-		setTimeout(() => socket.emit('set_force_start', gameConfig.customGameId, true), 1000)
-	if (gameType === GameType.Custom)
-		socket.emit('set_custom_options', gameConfig.customGameId, { "game_speed": gameConfig.customGameSpeed })
+		setTimeout(() => {
+			socket.emit('set_force_start', gameConfig.customGameId, true)
+			log.debug('sent: set_force_start')
+		}, 1000)
+	// if we are the first player in the queue and number of players has changed, set the game speed
+	if (gameType === GameType.Custom
+		&& data.usernames[0] === gameConfig.username
+		&& data.numPlayers != queueNumPlayers
+		&& data.options.game_speed != gameConfig.customGameSpeed)
+		setTimeout(() => {
+			socket.emit(
+				'set_custom_options',
+				gameConfig.customGameId, {
+				"game_speed": gameConfig.customGameSpeed
+			})
+			log.debug('sent: set_custom_options')
+		}, 1000)
+	queueNumPlayers = data.numPlayers
 })
 
 function joinGame() {
