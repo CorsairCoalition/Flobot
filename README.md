@@ -6,17 +6,16 @@ This bot is an AI agent that competes on the [generals.io bot server](https://bo
 
 See [developer documentation](https://dev.generals.io/).
 
-## Compilation
+## Build
 
 ```sh
 $ npm clean-install # install required packages
-$ npm i -g typescript # install typescript compiler, tsc, globally
-$ tsc # compile app.ts to app.js
+$ npm run build # compile app.ts to app.js
 ```
 
 ## Configuration
 
-Rename `config.json.example` to `config.json` and make updates.
+Copy `config.json.example` to `config.json` and make updates.
 
 1. Change `userId` to a random string.
 2. Change `username` to the bot's name. According to the developer documentation, bot names must start with `[Bot]`.
