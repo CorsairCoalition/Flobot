@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FlorianLangeder/generals.io-Bot.git"
+    "url": "git+https://github.com/CorsairCoalition/Flobot"
   },
   "keywords": [
     "generals.io",
@@ -29,7 +29,7 @@
   "author": "Florian Langeder",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/FlorianLangeder/generals.io-Bot/issues"
+    "url": "https://github.com/CorsairCoalition/Flobot/issues"
   },
-  "homepage": "https://github.com/FlorianLangeder/generals.io-Bot#readme"
+  "homepage": "https://github.com/CorsairCoalition/Flobot#readme"
 }

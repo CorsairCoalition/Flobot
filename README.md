@@ -1,32 +1,30 @@
-# generals.io-Bot
+# Flobot
 
-Ai for the online strategy game http://bot.generals.io/  (See dev doc for reference: http://dev.generals.io/)
+[generals.io](https://generals.io/) is a fast-paced strategy game where you expand your land and battle with enemies over theirs. You lose when your general is taken, but capturing an opponent's general gives you control of their entire empire.
 
-The bot is running under the name **[Bot] Flobot** in 1v1 and consistantly sits on rank 2.
+This bot is an AI agent that competes on the [generals.io bot server](https://bot.generals.io/).
 
-Another instance is playing Free For All(**[Bot] FLOBOT9000**) where it reached #1.
+See [developer documentation](https://dev.generals.io/).
 
-## How to use
+## Configuration
 
-You need a **config.js** file in the main directory, that looks like:
+Rename `config.js.example` to `config.js` and make updates.
 
-```javascript
-let config = {};
 
-config.user_id = 'myid';
-config.username = '[Bot] MyBotName';
-config.custom_game_id = 'MyRoomName';
-
-config.user_idFFA = 'myFFAid';
-config.usernameFFA = '[Bot] MyFFABotName';
-
-module.exports = config;
-```
-
-Run the bot:
+## Run
 
 ```
-node app.js			//start in custom game lobby
-node app.js -o		//one vs one lobby
-node app.js -f		//free for all lobby
+	Usage: ts-node app.ts [options] [command]
+
+	Options:
+	-V, --version          output the version number
+	-n, --number <number>  number of games to play (default: 3)
+	-d, --debug            enable debugging (default: false)
+	-s, --set-username     attempt to set username: [Bot] Floatbot (default: false)
+	-h, --help             display help for command
+
+	Commands:
+	ffa                    free for all
+	1v1                    one vs one
+	custom [id]            custom game
 ```

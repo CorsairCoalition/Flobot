@@ -1,10 +1,13 @@
 {
 	"gameConfig": {
 		"endpoint": "wss://botws.generals.io/",
-		"userId": "d0iVXBXgP",
-		"username": "Floatbot",
+		"userId": "RANDOMLY_GENERATED_STRING",
+		"username": "[Bot] Floatbot",
 		"customGameId": "floatbot",
-		"warCry": "Beep bop blop!"
+		"warCry": [
+			"Beep bop blop!",
+			"Learn more at github.com/CorsairCoalition/Flobot"
+		]
 	},
 	"redisConfig": {
 		"HOST": "",

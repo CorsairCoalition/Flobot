@@ -16,27 +16,30 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
 const gameConfig = config.gameConfig
 const redisConfig = config.redisConfig
+const REDIS_CHANNEL = 'flobot-' + gameConfig.username
 
 interface Log {
-	out: (msg: string) => void,
-	err: (msg: string) => void,
+	stdout: (msg: string) => void,
+	stderr: (msg: string) => void,
 	debug: (msg: string) => void,
+	redis: (msg: string) => void,
 }
 
 const log: Log = {
-	out: (msg: string) => console.log(new Date().toISOString(), msg),
-	err: (msg: string) => console.error(new Date().toISOString(), msg),
+	stdout: (msg: string) => console.log(new Date().toISOString(), msg),
+	stderr: (msg: string) => console.error(new Date().toISOString(), msg),
 	debug: (msg: string) => { if (options.debug) console.error(new Date().toISOString(), msg) },
+	redis: (msg: string) => { if (redisClient !== undefined) redisClient.publish(REDIS_CHANNEL, msg) },
 }
 
 process.once('SIGINT', async (code) => {
-	log.err('Interrupted. Exiting gracefully.')
+	log.stderr('Interrupted. Exiting gracefully.')
 	await socket.disconnect()
 	redisClient.quit()
 })
 
 process.once('SIGTERM', async (code) => {
-	log.err('Terminated. Exiting gracefully.')
+	log.stderr('Terminated. Exiting gracefully.')
 	redisClient.quit()
 	socket.disconnect()
 })
@@ -51,16 +54,18 @@ const enum GameType {
 
 // redis setup
 
-const REDIS_CHANNEL = 'flobot-' + gameConfig.username
-const redisClient = Redis.createClient({
-	url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:443`,
-	socket: {
-		tls: true,
-		servername: redisConfig.HOST,
-	}
-})
-redisClient.on('error', (error: Error) => console.error('[Redis]', error))
-redisClient.connect()
+let redisClient = undefined
+if (redisConfig.HOST !== undefined) {
+	redisClient = Redis.createClient({
+		url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:443`,
+		socket: {
+			tls: true,
+			servername: redisConfig.HOST,
+		}
+	})
+	redisClient.on('error', (error: Error) => console.error('[Redis]', error))
+	redisClient.connect()
+}
 
 // socket.io setup
 let socket = io(gameConfig.endpoint, {
@@ -80,6 +85,7 @@ program
 	.description(pkg.description)
 	.option('-n, --number <number>', 'number of games to play', parseInt, 3)
 	.option('-d, --debug', 'enable debugging', false)
+	.option('-s, --set-username', `attempt to set username: ${gameConfig.username}`, false)
 	.showHelpAfterError()
 
 program
@@ -98,7 +104,7 @@ program
 	.description('custom game')
 	.action((id) => {
 		gameType = GameType.Custom
-		customGameId = id
+		gameConfig.customGameId = id
 	})
 
 program.parse()
@@ -116,14 +122,17 @@ let usernames: string[]
 let numberOfGames = options.number
 
 socket.on('connect', async () => {
-	log.out('connected')
-	redisClient.publish(REDIS_CHANNEL, 'connected')
+	log.stdout(`connected as ${gameConfig.username}`)
+	if (options.setUsername) {
+		socket.emit('set_username', gameConfig.userId, gameConfig.username)
+	}
+	log.redis(`connected ${gameConfig.username}`)
 	joinGame()
 })
 
 socket.on('disconnect', async (reason: string) => {
 	// exit if disconnected intentionally; auto-reconnect otherwise
-	await redisClient.publish(REDIS_CHANNEL, 'disconnected ' + reason)
+	await log.redis('disconnected ' + reason)
 	switch (reason) {
 		case 'io server disconnect':
 			console.error("disconnected: " + reason)
@@ -135,15 +144,33 @@ socket.on('disconnect', async (reason: string) => {
 	}
 })
 
+socket.on('error_set_username', (message: string) => {
+	if (message === '')
+		message = `username set to ${gameConfig.username}`
+	log.stdout(`[error_set_username] ${message}`)
+})
+
 socket.on('game_start', (data: { playerIndex: number; replay_id: string; usernames: string[]; chat_room: string; }) => {
 	// Get ready to start playing the game.
 	playerIndex = data.playerIndex
 	bot = undefined
 	replay_id = data.replay_id
 	usernames = data.usernames
-	redisClient.publish(REDIS_CHANNEL, 'game_start ' + replay_id)
-	log.out(`[game_start] replay: ${replay_id}, users: ${usernames}`)
-	socket.emit('chat_message', data.chat_room, gameConfig.warCry)
+	log.stdout(`[game_start] replay: ${replay_id}, users: ${usernames}`)
+	log.redis('game_start ' + replay_id)
+
+	// iterate over gameConfig.warCry to send chat messages
+	function later(delay: number) {
+		return new Promise(function (resolve) {
+			setTimeout(resolve, delay)
+		})
+	}
+
+	for (let i = 0; i < gameConfig.warCry.length; i++) {
+		later(1000 * i).then(() => {
+			socket.emit('chat_message', data.chat_room, gameConfig.warCry[i])
+		})
+	}
 })
 
 socket.on('game_update', (data: object) => {
@@ -156,48 +183,45 @@ socket.on('game_update', (data: object) => {
 })
 
 socket.on('game_lost', (data: { killer: string }) => {
-	redisClient.publish(REDIS_CHANNEL, `game_lost ${replay_id}, killer: ${usernames[data.killer]}`)
-	log.out(`[game_lost] ${replay_id}, killer: ${usernames[data.killer]}`)
+	log.stdout(`[game_lost] ${replay_id}, killer: ${usernames[data.killer]}`)
+	log.redis(`game_lost ${replay_id}, killer: ${usernames[data.killer]}`)
 	socket.emit('leave_game')
 	bot = undefined
 	playAgain()
 })
 
 socket.on('game_won', () => {
-	redisClient.publish(REDIS_CHANNEL, `game_won ${replay_id}`)
-	log.out(`[game_won] ${replay_id}`)
+	log.stdout(`[game_won] ${replay_id}`)
+	log.redis(`game_won ${replay_id}`)
 	socket.emit('leave_game')
 	bot = undefined
 	playAgain()
 })
 
 socket.on('chat_message', (chat_room: string, data: { username: string, playerIndex: number, text: string }) => {
-	if(data.username)
-		redisClient.publish(REDIS_CHANNEL, `chat_message [${data.username}] ${data.text}`)
+	if (data.username)
+		log.redis(`chat_message [${data.username}] ${data.text}`)
 });
 
 function joinGame() {
 	switch (gameType) {
 		case GameType.FFA:
-			socket.emit('set_username', gameConfig.userId, gameConfig.username)
 			socket.emit('play', gameConfig.userId)
 			socket.emit('set_force_start', null, true)
-			log.out('[joined] FFA')
-			redisClient.publish(REDIS_CHANNEL, 'joined FFA')
+			log.stdout('[joined] FFA')
+			log.redis('joined FFA')
 			break
 		case GameType.OneVsOne:
-			socket.emit('set_username', gameConfig.userId, gameConfig.username)
 			socket.emit('join_1v1', gameConfig.userId)
-			log.out('[joined] 1v1')
-			redisClient.publish(REDIS_CHANNEL, 'joined 1v1')
+			log.stdout('[joined] 1v1')
+			log.redis('joined 1v1')
 			break
 		case GameType.Custom:
-			socket.emit('set_username', gameConfig.userId, gameConfig.username)
-			socket.emit('join_private', customGameId, gameConfig.userId)
-			setTimeout(() => socket.emit('set_force_start', customGameId, true), 1000)
-			// socket.emit('set_force_start', customGameId, true)
-			log.out(`[joined] custom: ${customGameId}`)
-			redisClient.publish(REDIS_CHANNEL, `joined custom: ${customGameId}`)
+			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
+			setTimeout(() => socket.emit('set_force_start', gameConfig.customGameId, true), 1000)
+			// socket.emit('set_force_start', gameConfig.customGameId, true)
+			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
+			log.redis(`joined custom: ${gameConfig.customGameId}`)
 			break
 	}
 }
