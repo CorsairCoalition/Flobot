@@ -219,7 +219,7 @@ function joinGame() {
 	switch (gameType) {
 		case GameType.FFA:
 			socket.emit('play', gameConfig.userId)
-			socket.emit('set_force_start', null, true)
+			setTimeout(() => socket.emit('set_force_start', null, true), 10000)
 			log.stdout('[joined] FFA')
 			log.redis('joined FFA')
 			break
@@ -230,8 +230,7 @@ function joinGame() {
 			break
 		case GameType.Custom:
 			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
-			setTimeout(() => socket.emit('set_force_start', gameConfig.customGameId, true), 1000)
-			// socket.emit('set_force_start', gameConfig.customGameId, true)
+			setTimeout(() => socket.emit('set_force_start', gameConfig.customGameId, true), 10000)
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
 			log.redis(`joined custom: ${gameConfig.customGameId}`)
 			break
