@@ -3,6 +3,7 @@ config.json
 
 # tsc output
 app.js
+redis.js
 
 # Logs
 logs
