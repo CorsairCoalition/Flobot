@@ -27,14 +27,14 @@ interface Log {
 	stdout: (msg: string) => void,
 	stderr: (msg: string) => void,
 	debug: (msg: string) => void,
-	redis: (msg: string) => void,
+	redis: (msgObj: object) => void,
 }
 
 const log: Log = {
 	stdout: (msg: string) => console.log(new Date().toISOString(), msg),
 	stderr: (msg: string) => console.error(new Date().toISOString(), msg),
 	debug: (msg: string) => { if (options.debug) console.error(new Date().toISOString(), msg) },
-	redis: (msg: string) => { if (redisClient !== undefined) redisClient.publish(REDIS_CHANNEL, msg) },
+	redis: (msgObj: object) => { if (redisClient !== undefined) redisClient.publish(REDIS_CHANNEL, JSON.stringify(msgObj)) },
 }
 
 process.once('SIGINT', async (code) => {
@@ -156,18 +156,22 @@ socket.on('connect', async () => {
 		socket.emit('set_username', gameConfig.userId, gameConfig.username)
 		log.debug(`sent: set_username, ${gameConfig.userId}, ${gameConfig.username}`)
 	}
-	log.redis(`connected ${gameConfig.username}`)
+	log.redis({ connected: gameConfig.username })
 	joinGame()
 })
 
 socket.on('disconnect', async (reason: string) => {
 	// exit if disconnected intentionally; auto-reconnect otherwise
-	await log.redis('disconnected ' + reason)
+	await log.redis({ disconnected: reason })
 	switch (reason) {
 		case 'io server disconnect':
 			console.error("disconnected: " + reason)
+			if(redisClient !== undefined)
+				await redisClient.quit()
 			process.exit(3)
 		case 'io client disconnect':
+			if(redisClient !== undefined)
+				await redisClient.quit()
 			process.exit(0)
 		default:
 			console.error("disconnected: " + reason)
@@ -188,7 +192,7 @@ socket.on('game_start', (data: { playerIndex: number; replay_id: string; usernam
 	replay_id = data.replay_id
 	usernames = data.usernames
 	log.stdout(`[game_start] replay: ${replay_id}, users: ${usernames}`)
-	log.redis('game_start ' + replay_id)
+	log.redis({ game_start: replay_id })
 
 	// iterate over gameConfig.warCry to send chat messages
 	function later(delay: number) {
@@ -213,23 +217,29 @@ socket.on('game_update', (data: object) => {
 	} else {
 		bot.update(data)
 	}
+	log.redis({ game_update: data })
 })
 
 socket.on('game_lost', (data: { killer: string }) => {
 	log.stdout(`[game_lost] ${replay_id}, killer: ${usernames[data.killer]}`)
-	log.redis(`game_lost ${replay_id}, killer: ${usernames[data.killer]}`)
+	log.redis({
+		game_lost: {
+			replay_id: replay_id,
+			killer: usernames[data.killer]
+		}
+	})
 	leaveGame()
 })
 
 socket.on('game_won', () => {
 	log.stdout(`[game_won] ${replay_id}`)
-	log.redis(`game_won ${replay_id}`)
+	log.redis({ game_won: replay_id })
 	leaveGame()
 })
 
 socket.on('chat_message', (chat_room: string, data: { username: string, playerIndex: number, text: string }) => {
 	if (data.username)
-		log.redis(`chat_message [${data.username}] ${data.text}`)
+		log.redis({ chat_message: data })
 });
 
 let queueNumPlayers: number = 0
@@ -260,19 +270,26 @@ function joinGame() {
 		case GameType.FFA:
 			socket.emit('play', gameConfig.userId)
 			log.stdout('[joined] FFA')
-			log.redis('joined FFA')
+			log.redis({joined: {
+				gameType: 'FFA',
+			}})
 			break
 		case GameType.OneVsOne:
 			socket.emit('join_1v1', gameConfig.userId)
 			log.stdout('[joined] 1v1')
-			log.redis('joined 1v1')
+			log.redis({joined: {
+				gameType: '1v1',
+			}})
 			break
 		case GameType.Custom:
 			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
 			setTimeout(setCustomOptions, 100)
 			setTimeout(setForceStart, 2000)
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
-			log.redis(`joined custom: ${gameConfig.customGameId}`)
+			log.redis({joined: {
+				gameType: 'custom',
+				gameId: gameConfig.customGameId,
+			}})
 			break
 	}
 	gameJoined = true
