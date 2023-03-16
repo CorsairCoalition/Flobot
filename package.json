@@ -1,6 +1,6 @@
 {
-  "name": "generals.io-bot",
-  "version": "1.0.2",
+  "name": "generals.io-flobot",
+  "version": "2",
   "description": "",
   "main": "app.js",
   "dependencies": {

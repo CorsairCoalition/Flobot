@@ -6,6 +6,7 @@ import Bot = require('./scripts/bot')
 
 // configuration
 
+const BOT_TYPE = 'flobot'
 const GAME_SERVER_URL = 'wss://botws.generals.io/'
 const DEFAULT_NUMBER_OF_GAMES = 3
 const DEFAULT_CUSTOM_GAME_SPEED = 4
@@ -17,7 +18,7 @@ const redisConfig = config.redisConfig
 // create a unique botId by hashing gameConfig.userId
 gameConfig.botId = require('crypto').createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
 gameConfig.customGameSpeed = gameConfig.customGameSpeed || DEFAULT_CUSTOM_GAME_SPEED
-const REDIS_CHANNEL = 'flobot-' + gameConfig.botId
+const REDIS_CHANNEL = BOT_TYPE + '-' + gameConfig.botId
 redisConfig.PORT = redisConfig.PORT || 443
 
 // program flow setup
@@ -138,10 +139,13 @@ program.parse()
 const options = program.opts()
 options.numberOfGames = parseInt(options.numberOfGames) || DEFAULT_NUMBER_OF_GAMES
 
-log.debug("debugging enabled")
-log.debug("gameConfig: ")
+log.stdout(`[initilizing] ${pkg.name} v${pkg.version}`)
+log.stdout(`[initilizing] botId: ${gameConfig.botId}`)
+
+log.debug("[debug] debugging enabled")
+log.debug("[debug] gameConfig: ")
 log.debug(gameConfig)
-log.debug("options: ")
+log.debug("[debug] options: ")
 log.debug(options)
 
 // handle game events
