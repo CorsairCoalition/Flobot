@@ -192,7 +192,7 @@ socket.on('game_start', (data: { playerIndex: number; replay_id: string; usernam
 	replay_id = data.replay_id
 	usernames = data.usernames
 	log.stdout(`[game_start] replay: ${replay_id}, users: ${usernames}`)
-	log.redis({ game_start: replay_id })
+	log.redis({ game_start: data })
 
 	// iterate over gameConfig.warCry to send chat messages
 	function later(delay: number) {
@@ -233,7 +233,11 @@ socket.on('game_lost', (data: { killer: string }) => {
 
 socket.on('game_won', () => {
 	log.stdout(`[game_won] ${replay_id}`)
-	log.redis({ game_won: replay_id })
+	log.redis({
+		game_won: {
+			replay_id: replay_id
+		}
+	})
 	leaveGame()
 })
 
