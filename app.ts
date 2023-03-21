@@ -166,11 +166,11 @@ socket.on('disconnect', async (reason: string) => {
 	switch (reason) {
 		case 'io server disconnect':
 			console.error("disconnected: " + reason)
-			if(redisClient !== undefined)
+			if (redisClient !== undefined)
 				await redisClient.quit()
 			process.exit(3)
 		case 'io client disconnect':
-			if(redisClient !== undefined)
+			if (redisClient !== undefined)
 				await redisClient.quit()
 			process.exit(0)
 		default:
@@ -274,26 +274,32 @@ function joinGame() {
 		case GameType.FFA:
 			socket.emit('play', gameConfig.userId)
 			log.stdout('[joined] FFA')
-			log.redis({joined: {
-				gameType: 'FFA',
-			}})
+			log.redis({
+				joined: {
+					gameType: 'FFA',
+				}
+			})
 			break
 		case GameType.OneVsOne:
 			socket.emit('join_1v1', gameConfig.userId)
 			log.stdout('[joined] 1v1')
-			log.redis({joined: {
-				gameType: '1v1',
-			}})
+			log.redis({
+				joined: {
+					gameType: '1v1',
+				}
+			})
 			break
 		case GameType.Custom:
 			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
 			setTimeout(setCustomOptions, 100)
 			setTimeout(setForceStart, 2000)
 			log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
-			log.redis({joined: {
-				gameType: 'custom',
-				gameId: gameConfig.customGameId,
-			}})
+			log.redis({
+				joined: {
+					gameType: 'custom',
+					gameId: gameConfig.customGameId,
+				}
+			})
 			break
 	}
 	gameJoined = true
