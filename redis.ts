@@ -3,8 +3,6 @@ import fs = require('node:fs')
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
 const redisConfig = config.redisConfig
 
-const CHANNELS: string[] = ['flobot-yHYMxsA', 'flobot-QqUNr6s']
-
 const redisClient = Redis.createClient({
 	url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:${redisConfig.PORT}`,
 	socket: {
@@ -13,7 +11,6 @@ const redisClient = Redis.createClient({
 	}
 })
 redisClient.on('error', (error: Error) => console.error(new Date().toISOString(), '[Redis]', error))
-redisClient.connect()
 
 process.once('SIGINT', async (code) => {
 	console.error(new Date().toISOString(), 'Interrupted. Exiting gracefully.')
@@ -30,14 +27,21 @@ const listener = (message: string, channel: string) => {
 		return
 	}
 
-	// check if msgObj has a 'game_update' key
-	// if not, print the channel and the message
-	if (!('game_update' in msgObj))
-		console.log(new Date().toISOString(), channel, msgObj)
+	console.log(new Date().toISOString(), channel, msgObj)
 }
 
-for (const CHANNEL of CHANNELS) {
-	redisClient.subscribe(CHANNEL, listener).then(() => {
-		console.log('Listening for updates on', CHANNEL, '...')
-	})
+async function connectAndSubscribe(channels: string[]) {
+	await redisClient.connect()
+	for (const channel of channels) {
+		redisClient.subscribe(channel, listener).then(() => {
+			console.log('Listening for updates on', channel, '...')
+		})
+	}
+}
+
+if (process.argv.length > 2) {
+	let channels = process.argv.slice(2)
+	connectAndSubscribe(channels)
+} else {
+	console.log("Usage: coffee redis-watch.coffee <channel...>")
 }
