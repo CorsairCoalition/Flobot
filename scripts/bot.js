@@ -4,11 +4,14 @@ const Strategy = require('./strategy.js');
 
 class Bot {
 
+	moveCount = 0
+
 	constructor(socket, playerIndex, data) {
 		this.socket = socket;
 
 		this.queuedMoves = 0;
 		this.lastAttackedIndex = -1;
+		this.moveCount = 0;
 
 		//true if an area was calculated where units should be gathered
 		this.isCollecting = false;
@@ -39,6 +42,7 @@ class Bot {
 			this.queuedMoves++;
 			this.lastAttackedIndex = move.end;
 			this.socket.emit('attack', move.start, move.end);
+			this.moveCount++;
 		}
 	}
 }

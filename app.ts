@@ -220,9 +220,7 @@ socket.on('game_update', (data: GeneralsIO.GameUpdate) => {
 
 	redis.listPush(RedisData.LIST.SCORES, data.scores)
 	redis.listPush(RedisData.LIST.MAX_ARMY_ON_TILE, maxArmyOnTile)
-
-	// TODO: count the moves and add to redis
-	// redis.listPush(RedisData.LIST.MOVE_COUNT, moveCount)
+	redis.listPush(RedisData.LIST.MOVE_COUNT, bot.moveCount)
 })
 
 socket.on('game_lost', (data: { killer: string }) => {
