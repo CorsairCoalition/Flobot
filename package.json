@@ -1,6 +1,6 @@
 {
   "name": "floatbot",
-  "version": "3",
+  "version": "4",
   "description": "",
   "main": "app.js",
   "dependencies": {
@@ -30,7 +30,7 @@
     "javascript",
     "ai"
   ],
-  "author": "Florian Langeder",
+  "author": "Aaditya Bhatia",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/CorsairCoalition/Flobot/issues"
