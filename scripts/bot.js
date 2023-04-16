@@ -1,8 +1,9 @@
-const GameState = require('./gameState.js');
-const GameMap = require('./gameMap.js');
-const Strategy = require('./strategy.js');
+import GameState from './gameState.js'
+import GameMap from './gameMap.js'
+import Strategy from './strategy.js'
+import { Log, later, random } from '../utils.js'
 
-class Bot {
+export default class Bot {
 
 	moveCount = 0
 
@@ -46,5 +47,3 @@ class Bot {
 		}
 	}
 }
-
-module.exports = Bot;

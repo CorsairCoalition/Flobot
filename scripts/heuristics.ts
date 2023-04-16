@@ -1,7 +1,7 @@
-const TILE = require('./tile.js');
+/// <reference path="../app.d.ts" />
 
-class Heuristics {
-	
+export default class Heuristics {
+
 	//TODO: choose by manhatten distance, not breadth search distance
 	//returns the furthest possible tile index from the general, with maximum distance to edge
 	//tiles are arrays of Objects with index and generalDistance properties
@@ -11,7 +11,7 @@ class Heuristics {
 		let optimalTile = {"index": -1, "edgeWeight": -1};
 
 		let maxGeneralDistance = tiles[tiles.length -1].generalDistance;
-	
+
 		//first elements are the closest to the general
 		for(let i = tiles.length - 1; i >= 0; i--) {
 			let tile = tiles[i];
@@ -22,7 +22,7 @@ class Heuristics {
 				return optimalTile.index;
 			}
 
-			//a tile with maximum generalDistance and 
+			//a tile with maximum generalDistance and
 			if(edgeWeight > optimalTile.edgeWeight) {
 				optimalTile.index = tile.index;
 				optimalTile.edgeWeight = edgeWeight;
@@ -40,7 +40,7 @@ class Heuristics {
 	//find an enemy tile adjcaent to fog with a minimum army value
 	static chooseEnemyTargetTileByLowestArmy(gameState, gameMap) {
 		let tilesWithFog = [];
-		
+
 		//loop through all visible enemy tiles
 		for (let [key, value] of gameState.enemyTiles) {
 			if(gameMap.isAdjacentToFog(gameState, key)) {
@@ -62,7 +62,7 @@ class Heuristics {
 	static calcCaptureWeight(playerIndex, terrainValue) {
 		if(terrainValue == playerIndex) {
 			return 0;
-		} else if(terrainValue == TILE.EMPTY || terrainValue == TILE.FOG) {
+		} else if(terrainValue == GeneralsIO.TILE.EMPTY || terrainValue == GeneralsIO.TILE.FOG) {
 			return 1;
 		} else if(terrainValue < 0) {
 			//tile belonds to enemy
@@ -70,5 +70,3 @@ class Heuristics {
 		}
 	}
 }
-
-module.exports = Heuristics;

@@ -1,6 +1,11 @@
-const TILE = require('./tile.js'); 
+/// <reference path="../app.d.ts" />
 
-class GameMap {
+export default class GameMap {
+
+	width: number;
+	height: number;
+	size: number;
+	playerIndex: number;
 
 	constructor(width, height, playerIndex, generals) {
 		this.width = width;
@@ -11,9 +16,9 @@ class GameMap {
 
 	//needs a tile object with index and value field
 	isWalkable(gameState, tile) {
-		return tile.value !== TILE.FOG_OBSTACLE && 
-			tile.value !== TILE.OFF_LIMITS &&
-			tile.value !== TILE.MOUNTAIN && 
+		return tile.value !== GeneralsIO.TILE.FOG_OBSTACLE &&
+			tile.value !== GeneralsIO.TILE.OFF_LIMITS &&
+			tile.value !== GeneralsIO.TILE.MOUNTAIN &&
 			!this.isCity(gameState, tile);
 	}
 
@@ -39,7 +44,7 @@ class GameMap {
 		let adjacentIndex = index + distance;
 		let curRow = Math.floor(index / this.width);
 		let adjacentRow = Math.floor(adjacentIndex / this.width);
-	
+
 		switch(distance) {
 			//search for either right or left neighbor
 			case 1:
@@ -62,7 +67,7 @@ class GameMap {
 				}
 				break;
 		}
-		return {"index": adjacentIndex, "value": TILE.OFF_LIMITS};
+		return {"index": adjacentIndex, "value": GeneralsIO.TILE.OFF_LIMITS};
 	}
 
 	isAdjacentToFog(gameState, index) {
@@ -93,14 +98,14 @@ class GameMap {
 		return false;
 	}
 
-	//takes a list of tiles and returns a list of all those with at least more than 1 unit 
+	//takes a list of tiles and returns a list of all those with at least more than 1 unit
 	getMoveableTiles(gameState) {
 		let tiles = [];
 		for (var [key, value] of gameState.ownTiles) {
 			if(value > 1) {
 				tiles.push(key);
 			}
-		}		
+		}
 		return tiles;
 	}
 
@@ -111,7 +116,7 @@ class GameMap {
 		return 0;
 	}
 
-	//gets a calculated distance from closest edges 
+	//gets a calculated distance from closest edges
 	//distance from closest edge * distance from closest edge on complementary side
 	getEdgeWeightForIndex(index) {
 		let tileCoords = this.getCoordinatesFromTileIndex(index);
@@ -135,5 +140,3 @@ class GameMap {
 		}
 	}
 }
-
-module.exports = GameMap;

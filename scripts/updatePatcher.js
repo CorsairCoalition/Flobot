@@ -7,7 +7,7 @@
 	 * Example 1: patching a diff of [1, 1, 3] onto [0, 0] yields [0, 3].
 	 * Example 2: patching a diff of [0, 1, 2, 1] onto [0, 0] yields [2, 0].
 	 */
-module.exports = function(old, diff) {
+export function patch(old, diff) {
 	let out = [];
 	let i = 0;
 	while (i < diff.length) {

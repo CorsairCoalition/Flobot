@@ -1,5 +1,5 @@
-import Redis = require('redis')
-import fs = require('node:fs')
+import Redis from 'redis'
+import fs from 'node:fs'
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
 const redisConfig = config.redisConfig
 

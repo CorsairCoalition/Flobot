@@ -1,14 +1,14 @@
-const Algorithms = require('../algorithms.js');
-const Heuristics = require('../heuristics.js');
+import Algorithms from '../algorithms.js'
+import Heuristics from '../heuristics.js'
 
-class Discover {
-	//every tile just got an extra unit, move them to conquer new tiles 
+export default class Discover {
+	//every tile just got an extra unit, move them to conquer new tiles
 	static first(bot, waitTurns) {
 		//get all tiles, that can be reached with a maximum of moves
 		let radius = this.armiesReceivedTillTurn(waitTurns + 1);
 		let reachableTiles = Algorithms.bfs(bot.gameState, bot.gameMap, bot.gameState.ownGeneral, radius);
 		let discoverTile = Heuristics.chooseDiscoverTile(bot.gameState, bot.gameMap, reachableTiles);
-		
+
 		let moves = Algorithms.dijkstra(bot.gameState, bot.gameMap, bot.gameState.ownGeneral, discoverTile);
 		bot.queueMoves(moves);
 	}
@@ -28,5 +28,3 @@ class Discover {
 		return (turn / 2) + 1;
 	}
 }
-
-module.exports = Discover;

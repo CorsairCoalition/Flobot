@@ -2,7 +2,7 @@
 config.json
 
 # tsc output
-*.js
+out/
 
 # Logs
 logs

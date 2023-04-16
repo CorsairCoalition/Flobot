@@ -1,10 +1,9 @@
-const Spread = require('./strategies/spread.js');
-const Discover = require('./strategies/discover.js');
-const Collect = require('./strategies/collect.js');
-const Infiltrate = require('./strategies/infiltrate.js');
-const RushGeneral = require('./strategies/rushGeneral.js');
-const Heuristics = require('./heuristics.js');
-const Algorithms = require('./algorithms.js');
+import Spread from './strategies/spread.js'
+import Discover from './strategies/discover.js'
+import Collect from './strategies/collect.js'
+import Infiltrate from './strategies/infiltrate.js'
+import RushGeneral from './strategies/rushGeneral.js'
+import Algorithms from './algorithms.js'
 
 //armies are always given at even turn numbers
 //turn 1 -> 1 turn 2 -> 2, turn 4 -> 3, turn 24 -> 13 (turn / 2 + 1) = army count
@@ -14,7 +13,7 @@ const REINFORCEMENT_INTERVAL = 50;
 const SPREADING_TIMES = 4;
 const ATTACK_TURNS_BEFORE_REINFORCEMENTS = 10;
 
-class Strategy {
+export default class Strategy {
 
 	static pickStrategy(bot) {
 		let turn = bot.gameState.turn;
@@ -25,7 +24,7 @@ class Strategy {
 		} else if(bot.isInfiltrating) {
 			//ignore every other strategies and attack enemy until no more attacks are possible
 			Infiltrate.infiltrate(bot);
-		} else if(turn % REINFORCEMENT_INTERVAL == 0 && 
+		} else if(turn % REINFORCEMENT_INTERVAL == 0 &&
 			(turn / REINFORCEMENT_INTERVAL <= SPREADING_TIMES || bot.gameState.enemyTiles.size == 0)) {
 			//spread every 50 turns, but only a fixed amount of times, unless no enemies are detected
 			Spread.spread(bot);
@@ -45,7 +44,7 @@ class Strategy {
 		} else if(bot.queuedMoves == 0) {
 			//take as many new tiles as possible till reinforcements come
 			Discover.second(bot, INITIAL_WAIT_TURNS);
-		} 
+		}
 	}
 
 	static midGame(bot, turn) {
@@ -56,7 +55,7 @@ class Strategy {
 			//reinforcements from general along the found path should be there a fixed amount of turns before new reinforcements come
 			//turn the "attack" should start from general
 			//e.g. path is 7 long. atk_turns_before_reinfocements are 10. 34 + 10 + 7 - 1 % 50 == 0 (start at turn 34 to arrive at turn 40)
-			
+
 			if(bot.collectArea.length == 2) {
 				//gathered units moved next to enemy tile. start to attack
 				//infiltrating is true until no adjacent enemies to attack found. focus moves on them
@@ -84,7 +83,7 @@ class Strategy {
 			if(!RushGeneral.tryToKillGeneral(bot)) {
 				//finish infiltrating first. (enemy can be discovered diagonally. move to adjacent tile first)
 				let pathToGeneral = Algorithms.aStar(bot.gameState, bot.gameMap, bot.lastAttackedIndex, [bot.gameState.enemyGeneral]);
-			
+
 				//either path has ended already, or tile does not have enough armies to attack
 				if(pathToGeneral.length <= 2 || bot.gameMap.remainingArmiesAfterAttack(bot.gameState, pathToGeneral[0], pathToGeneral[1]) <= 1) {
 					bot.isInfiltrating = false;
@@ -97,5 +96,3 @@ class Strategy {
 		}
 	}
 }
-
-module.exports = Strategy;

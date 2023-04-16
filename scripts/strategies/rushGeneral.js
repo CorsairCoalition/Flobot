@@ -1,10 +1,10 @@
-const Algorithms = require('../algorithms.js');
-const Collect = require('./collect.js');
+import Algorithms  from '../algorithms.js'
+import Collect  from './collect.js'
 
 const COLLECT_TURNS = 20;
 let collectTurnsLeft = COLLECT_TURNS;
 
-class RushGeneral {
+export default class RushGeneral {
 
 	static rush(bot) {
 		if(!this.tryToKillGeneral(bot)) {
@@ -26,7 +26,7 @@ class RushGeneral {
 	static moveToGeneral(bot, start) {
 		//start moving collected armies
 		let pathFromHighestArmyToGeneral = Algorithms.aStar(bot.gameState, bot.gameMap, start, [bot.gameState.enemyGeneral]);
-		
+
 		//if length would be 2 there is only the general left to attack, but there aren't enough armies to kill him
 		if(pathFromHighestArmyToGeneral.length > 2) {
 			bot.move({"start": start, "end": pathFromHighestArmyToGeneral[1]});
@@ -49,7 +49,7 @@ class RushGeneral {
 					if(this.hasEnoughArmiesToAttackGeneral(bot, nextTile.index)) {
 						bot.move({"start": nextTile.index, "end": bot.gameState.enemyGeneral});
 						bot.isInfiltrating = false;
-						return true;	
+						return true;
 					} else if(bot.gameState.armies[nextTile.index] > 1) {
 						attackableNeighbours.push(nextTile.index);
 					}
@@ -66,7 +66,7 @@ class RushGeneral {
 	//try to attack general with more than one neighbour
 	static tryGroupAttack(bot, attackableNeighbours) {
 		let highestArmy = -1;
-		let highestArmyTile = -1; 
+		let highestArmyTile = -1;
 		let attackableArmySum = 0;
 		for(let neighbour of attackableNeighbours) {
 			let armies = bot.gameState.armies[neighbour];
@@ -95,5 +95,3 @@ class RushGeneral {
 		return (bot.gameState.armies[index] - 1) > (bot.gameState.armies[bot.gameState.enemyGeneral] + nextTurnArmyGain);
 	}
 }
-
-module.exports = RushGeneral;

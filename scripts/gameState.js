@@ -1,7 +1,6 @@
-const TILE = require('./tile.js'); 
-const patch = require('./updatePatcher.js');
+import { patch } from './updatePatcher.js'
 
-class GameState {
+export default class GameState {
 
 	constructor(data, playerIndex) {
 		this.cities = [];
@@ -27,7 +26,7 @@ class GameState {
 		this.generals = data.generals;
 
 		this.turn = data.turn;
-	
+
 		// The first two terms in |map| are the dimensions.
 		this.width = this.map[0];
 		this.height = this.map[1];
@@ -48,11 +47,11 @@ class GameState {
 	updatePlayerTiles() {
 		this.ownTiles.clear();
 		this.enemyTiles.clear();
-		for(let i = 0; i < this.terrain.length; i++) {
+		for (let i = 0; i < this.terrain.length; i++) {
 			let tile = this.terrain[i];
-			if(tile >= 0) {
+			if (tile >= 0) {
 				let armies = this.armies[i];
-				if(tile == this.playerIndex) {
+				if (tile == this.playerIndex) {
 					this.ownTiles.set(i, armies);
 				} else {
 					this.enemyTiles.set(i, armies);
@@ -63,9 +62,9 @@ class GameState {
 
 	//store tiles, that have already been discovered, even if being recaptured or disguised
 	updateDiscoveredTiles() {
-		for(let i = 0; i < this.terrain.length; i++) {
-			if(!this.discoveredTiles[i]) {
-				if(this.ownTiles.has(i) || this.enemyTiles.has(i)) {
+		for (let i = 0; i < this.terrain.length; i++) {
+			if (!this.discoveredTiles[i]) {
+				if (this.ownTiles.has(i) || this.enemyTiles.has(i)) {
 					this.discoveredTiles[i] = true;
 				}
 			}
@@ -73,16 +72,14 @@ class GameState {
 	}
 
 	updateGenerals() {
-		for(let general of this.generals) {
-			if(general != -1) {
-				if(this.ownGeneral == -1) {
+		for (let general of this.generals) {
+			if (general != -1) {
+				if (this.ownGeneral == -1) {
 					this.ownGeneral = general;
-				} else if(general != this.ownGeneral) {
+				} else if (general != this.ownGeneral) {
 					this.enemyGeneral = general;
 				}
 			}
 		}
 	}
 }
-
-module.exports = GameState;

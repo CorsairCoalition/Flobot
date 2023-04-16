@@ -1,5 +1,5 @@
-class Spread {
-	//every tile just got an extra unit, move them to conquer new tiles 
+export default class Spread {
+	//every tile just got an extra unit, move them to conquer new tiles
 	static spread(bot) {
 		let gameMap = bot.gameMap;
 		let gameState = bot.gameState;
@@ -43,8 +43,8 @@ class Spread {
 
 	//TODO: sort while updating for more efficiency
 	static sortByNeighbourCount(moves) {
-		moves.sort((a,b) => 
-			(a.moves.length > b.moves.length) ? 1 : ((b.moves.length > a.moves.length) ? -1 : 0) 
+		moves.sort((a,b) =>
+			(a.moves.length > b.moves.length) ? 1 : ((b.moves.length > a.moves.length) ? -1 : 0)
 		);
 	}
 
@@ -54,5 +54,3 @@ class Spread {
 		);
 	}
 }
-
-module.exports = Spread;

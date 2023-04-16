@@ -5,7 +5,7 @@ import Redis from './redis.js'
 import io from 'socket.io-client'
 import fs from 'node:fs'
 import Bot from './scripts/bot.js'
-import { Log } from './utils'
+import { Log } from './utils.js'
 import crypto from 'crypto'
 
 // configuration
@@ -107,6 +107,7 @@ program
 program.parse()
 const options = program.opts()
 options.numberOfGames = parseInt(options.numberOfGames) || 1
+options.effectiveness = parseInt(options.effectiveness) || 100
 
 Log.stdout(`[initilizing] ${pkg.name} v${pkg.version}`)
 Log.stdout(`[initilizing] botId: ${botId}`)
@@ -163,7 +164,6 @@ socket.on('game_start', (data: GeneralsIO.GameStart) => {
 	redis.publish(RedisData.CHANNEL.STATE, { game_start: data })
 	redis.setKeyspaceName(data.replay_id)
 	redis.setKeys(data)
-	redis.expireKeyspace(60 * 60 * 24)
 
 	// iterate over gameConfig.warCry to send chat messages
 	function later(delay: number) {

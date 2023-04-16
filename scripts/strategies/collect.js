@@ -1,7 +1,7 @@
-const Heuristics = require('../heuristics.js');
-const Algorithms = require('../algorithms.js');
+import Heuristics from '../heuristics.js'
+import Algorithms from '../algorithms.js'
 
-class Collect {
+export default class Collect {
 
 	static getCollectArea(bot) {
 		let gameState = bot.gameState;
@@ -48,5 +48,3 @@ class Collect {
 		return index;
 	}
 }
-
-module.exports = Collect;

@@ -1,6 +1,6 @@
-const Heap = require('code42day-binary-heap'); 
+import Heap from 'code42day-binary-heap'
 
-class AStar {
+export default class AStar {
 	static init(gameState, gameMap) {
 		this.TILE_COST = 1;
 		let searchList = [];
@@ -107,5 +107,3 @@ class AStar {
 		return min;
 	}
 }
-
-module.exports = AStar;

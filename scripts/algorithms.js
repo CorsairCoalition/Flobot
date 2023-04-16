@@ -1,13 +1,13 @@
-const Heuristics = require('./heuristics.js');
-const AStar = require('./astar.js');
+import Heuristics from './heuristics.js'
+import AStar from './astar.js'
 
-class Algorithms {
+export default class Algorithms {
 
 	//breadth first search. get all reachable tiles in radius
 	static bfs(gameState, gameMap, node, radius) {
 		let isVisited = Array.apply(null, Array(gameMap.size)).map(function () { return false; })
 		isVisited[node] = true;
-		
+
 		let queue = [];
 		let curLayer = 0;
 		let curLayerTiles = 1;
@@ -22,7 +22,7 @@ class Algorithms {
 			if(curLayer != 0) {
 				foundNodes.push({"index": curTile, "generalDistance": curLayer});
 			}
-			
+
 			let adjacentTiles = gameMap.getAdjacentTiles(gameState, curTile);
 			//loop through adjacent tiles
 			for(let direction in adjacentTiles) {
@@ -44,7 +44,7 @@ class Algorithms {
 				//move to next layer, if radius reached -> stop
 				if(curLayer++ == radius) {
 					break;
-				}	
+				}
 				curLayerTiles = nextLayerTiles;
 				nextLayerTiles = 0;
 			}
@@ -61,7 +61,7 @@ class Algorithms {
 	static dijkstra(gameState, gameMap, start, end) {
 		let isVisited = [];
 		let previous = [];
-		
+
 		for(let i = 0; i < gameMap.size; i++) {
 			isVisited[i] = false;
 			previous[i] = i;
@@ -81,7 +81,7 @@ class Algorithms {
 			for(let direction in adjacentTiles) {
 				if (adjacentTiles.hasOwnProperty(direction)) {
 					let nextTile = adjacentTiles[direction];
-					if(!isVisited[nextTile.index] && !queue.includes(nextTile.index) 
+					if(!isVisited[nextTile.index] && !queue.includes(nextTile.index)
 						&& gameMap.isWalkable(gameState, nextTile)) {
 						previous[nextTile.index] = curTile;
 						if(nextTile.index == end) {
@@ -144,7 +144,7 @@ class Algorithms {
 					if(this.gameMap.isWalkable(this.curGameState, nextTile)) {
 						let nextWeight = Heuristics.calcCaptureWeight(this.gameMap.playerIndex, nextTile.value);
 						possibleMoves.push(this.decisionTreeSearchRec(nextTile.index, turns - 1, nextWeight));
-					} 
+					}
 				}
 			}
 
@@ -168,4 +168,3 @@ class Algorithms {
 		);
 	}
 }
-module.exports = Algorithms;

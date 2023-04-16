@@ -1,6 +1,6 @@
-const Algorithms = require('../algorithms.js');
+import Algorithms from '../algorithms.js'
 
-class Infiltrate {
+export default class Infiltrate {
 	//TODO: create function, that returns nearest enemy tile next to fog
 	static infiltrate(bot) {
 		let enemyNeighbor = -1;
@@ -18,7 +18,7 @@ class Infiltrate {
 						bot.gameMap.isAdjacentToFog(bot.gameState, nextTile.index)) {
 
 						//no tile found yet, or already found and less armies
-						if(enemyNeighbor == -1 || 
+						if(enemyNeighbor == -1 ||
 							bot.gameState.armies[nextTile.index] < bot.gameState.armies[enemyNeighbor.index]) {
 							enemyNeighbor = nextTile;
 						}
@@ -72,5 +72,3 @@ class Infiltrate {
 		return [];
 	}
 }
-
-module.exports = Infiltrate;

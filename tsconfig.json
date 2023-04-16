@@ -1,12 +1,13 @@
 {
 	"compilerOptions": {
-		"module": "CommonJS",
+		"module": "ES2022",
 		"target": "ES2022",
 		"removeComments": true,
 		"moduleResolution": "node",
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
+		"outDir": "out",
 	},
 	"exclude": [
 		"node_modules",
