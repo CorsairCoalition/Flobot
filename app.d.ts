@@ -197,5 +197,6 @@ declare namespace Config {
 		USERNAME: string
 		PASSWORD: string
 		CHANNEL_PREFIX: string
+		EXPIRATION_TIME: number
 	}
 }

@@ -8,10 +8,12 @@ export default class Redis {
 	private publisher: RedisClientType
 	private subscriber: RedisClientType
 	private CHANNEL_PREFIX: string
+	private EXPIRATION_TIME = 60 * 60 * 24 * 14 // default 2 weeks
 	private gameKeyspace: string
 
 	constructor(redisConfig: Config.Redis) {
 		this.CHANNEL_PREFIX = redisConfig.CHANNEL_PREFIX
+		this.EXPIRATION_TIME = redisConfig.EXPIRATION_TIME || this.EXPIRATION_TIME
 		this.subscriber = createClient({
 			url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:${redisConfig.PORT}`,
 			socket: {
@@ -35,7 +37,7 @@ export default class Redis {
 
 	public listPush(list: RedisData.LIST, data: any) {
 		this.publisher.rPush(this.gameKeyspace + '-' + list, JSON.stringify(data))
-		this.publisher.expire(this.gameKeyspace + '-' + list, 60 * 60 * 24)
+		this.publisher.expire(this.gameKeyspace + '-' + list, this.EXPIRATION_TIME)
 	}
 
 	public setKeys(keyValues: Record<string, any>) {
@@ -43,6 +45,7 @@ export default class Redis {
 		for (let key in keyValues) {
 			keyValues[key] = JSON.stringify(keyValues[key])
 		}
+		this.publisher.expire(this.gameKeyspace, this.EXPIRATION_TIME)
 		return this.publisher.hSet(this.gameKeyspace, keyValues)
 	}
 
@@ -62,10 +65,6 @@ export default class Redis {
 			values[key] = JSON.parse(values[key])
 		}
 		return values
-	}
-
-	public expireKeyspace(timeInSeconds: number) {
-		return this.publisher.expire(this.gameKeyspace, timeInSeconds)
 	}
 
 	public publish(channel: RedisData.CHANNEL, data: any) {

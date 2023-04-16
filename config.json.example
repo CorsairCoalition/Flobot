@@ -13,6 +13,7 @@
 		"HOST": "",
 		"PORT": 443,
 		"USERNAME": "",
-		"PASSWORD": ""
+		"PASSWORD": "",
+		"EXPIRATION_TIME": 1209600
 	}
 }
