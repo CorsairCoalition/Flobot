@@ -23,10 +23,7 @@ let botId = crypto.createHash('sha256').update(gameConfig.userId).digest('base64
 gameConfig.customGameSpeed = gameConfig.customGameSpeed || DEFAULT_CUSTOM_GAME_SPEED
 redisConfig.CHANNEL_PREFIX = BOT_TYPE + '-' + botId
 
-let redis = new Redis(redisConfig)
-
 // program flow setup
-
 process.once('SIGINT', async (code) => {
 	Log.stderr('Interrupted. Exiting gracefully.')
 	if (gameJoined) {
@@ -48,7 +45,6 @@ process.once('SIGTERM', async (code) => {
 })
 
 // data structures and definitions
-
 let gameType: Game.Type
 let bot: Bot
 let playerIndex: number
@@ -57,21 +53,7 @@ let usernames: string[]
 let currentGameNumber: number = 0
 let gameJoined: boolean = false
 
-// redis setup
-
-
-// socket.io setup
-
-let socket = io(GAME_SERVER_URL, {
-	rejectUnauthorized: false,
-	transports: ['websocket']
-})
-
-socket.on("error", (error: Error) => console.error('[socket.io]', error))
-socket.on("connect_error", (error: Error) => console.error('[socket.io]', error))
-
 // parse commands and options
-
 const program = new Command()
 program
 	.name(pkg.name)
@@ -117,8 +99,18 @@ Log.debug("[debug] debugging enabled")
 Log.debugObject("gameConfig", gameConfig)
 Log.debugObject("options", options)
 
-// handle game events
+let redis = new Redis(redisConfig)
 
+// socket.io setup
+let socket = io(GAME_SERVER_URL, {
+	rejectUnauthorized: false,
+	transports: ['websocket']
+})
+
+socket.on("error", (error: Error) => console.error('[socket.io]', error))
+socket.on("connect_error", (error: Error) => console.error('[socket.io]', error))
+
+// handle game events
 socket.on('connect', async () => {
 	Log.stdout(`[connected] ${gameConfig.username}`)
 	if (options.setUsername) {
