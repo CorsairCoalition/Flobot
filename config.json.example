@@ -1,5 +1,6 @@
 {
 	"gameConfig": {
+		"GAME_SERVER_URL": "wss://botws.generals.io/",
 		"userId": "RANDOMLY_GENERATED_STRING",
 		"username": "[Bot] Floatbot",
 		"customGameId": "floatbot",

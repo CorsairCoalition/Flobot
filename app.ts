@@ -11,8 +11,6 @@ import crypto from 'crypto'
 // configuration
 
 const BOT_TYPE = 'flobot'
-const GAME_SERVER_URL = 'wss://botws.generals.io/'
-const DEFAULT_CUSTOM_GAME_SPEED = 4
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
@@ -20,7 +18,7 @@ const gameConfig: Config.Game = config.gameConfig
 const redisConfig: Config.Redis = config.redisConfig
 // create a unique botId by hashing gameConfig.userId
 let botId = crypto.createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
-gameConfig.customGameSpeed = gameConfig.customGameSpeed || DEFAULT_CUSTOM_GAME_SPEED
+gameConfig.customGameSpeed = gameConfig.customGameSpeed || 4
 redisConfig.CHANNEL_PREFIX = BOT_TYPE + '-' + botId
 
 // program flow setup
@@ -102,7 +100,7 @@ Log.debugObject("options", options)
 let redis = new Redis(redisConfig)
 
 // socket.io setup
-let socket = io(GAME_SERVER_URL, {
+let socket = io(gameConfig.GAME_SERVER_URL, {
 	rejectUnauthorized: false,
 	transports: ['websocket']
 })
