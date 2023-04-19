@@ -108,6 +108,11 @@ let socket = io(gameConfig.GAME_SERVER_URL, {
 socket.on("error", (error: Error) => console.error('[socket.io]', error))
 socket.on("connect_error", (error: Error) => console.error('[socket.io]', error))
 
+socket.on("gio_error", (message: string) => {
+	Log.stderr(`[gio_error] ${message}`)
+	process.exit(4)
+})
+
 // handle game events
 socket.on('connect', async () => {
 	Log.stdout(`[connected] ${gameConfig.username}`)
@@ -140,8 +145,10 @@ socket.on('disconnect', async (reason: string) => {
 socket.on('error_set_username', (message: string) => {
 	if (message === '')
 		Log.stdout(`[set_username] username set to ${gameConfig.username}`)
-	else
-		Log.stdout(`[error_set_username] ${message}`)
+	else {
+		Log.stderr(`[error_set_username] ${message}`)
+		process.exit(4)
+	}
 })
 
 socket.on('game_start', (data: GeneralsIO.GameStart) => {
