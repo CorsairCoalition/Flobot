@@ -1,6 +1,6 @@
 {
   "name": "floatbot",
-  "version": "5",
+  "version": "5.1",
   "description": "",
   "main": "out/app.js",
   "type": "module",

@@ -57,7 +57,6 @@ program
 	.description(pkg.description)
 	.option('-n, --number-of-games <number>', 'number of games to play', '1')
 	.option('-d, --debug', 'enable debugging', false)
-	.option('-s, --set-username', `attempt to set username from config file`, false)
 	.arguments('<configFile>')
 	.showHelpAfterError()
 	.action(run)
@@ -110,19 +109,22 @@ socket.on("gio_error", (message: string) => {
 
 // handle game events
 socket.on('connect', async () => {
-	Log.stdout(`[connected] ${gameConfig.username}`)
-	if (options['setUsername']) {
-		socket.emit('set_username', gameConfig.userId, gameConfig.username)
-		Log.debug(`sent: set_username, ${gameConfig.userId}, ${gameConfig.username}`)
-	} else {
-		socket.emit('get_username', gameConfig.userId, (username: string) => {
-			gameConfig.username = username
-			Log.debug(`recv: username: ${username}`)
-		})
-	}
+	Log.stdout(`[connected] ${gameConfig.GAME_SERVER_URL}`)
+	socket.emit('get_username', gameConfig.userId, (username: string) => {
+		Log.debug(`recv: username: ${username}`)
+		Log.stdout(`[connected] username: ${username}`)
+		redis.publish(RedisData.CHANNEL.STATE, { connected: username })
 
-	redis.publish(RedisData.CHANNEL.STATE, { connected: gameConfig.username })
-	joinGame()
+		if (username !== gameConfig.username) {
+			// attempt to change username; it will take effect next time bot is started
+			Log.stdout(`[connected] current username: ${username}, changing to: ${gameConfig.username}`)
+			socket.emit('set_username', gameConfig.userId, gameConfig.username)
+			Log.debug(`sent: set_username, ${gameConfig.userId}, ${gameConfig.username}`)
+		}
+
+		gameConfig.username = username
+		joinGame()
+	})
 })
 
 socket.on('disconnect', async (reason: string) => {
@@ -148,7 +150,6 @@ socket.on('error_set_username', (message: string) => {
 		Log.stdout(`[set_username] username set to ${gameConfig.username}`)
 	else {
 		Log.stderr(`[error_set_username] ${message}`)
-		process.exit(4)
 	}
 })
 
