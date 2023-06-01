@@ -107,7 +107,13 @@ socket.on('connect', async () => {
 	if (options.setUsername) {
 		socket.emit('set_username', gameConfig.userId, gameConfig.username)
 		Log.debug(`sent: set_username, ${gameConfig.userId}, ${gameConfig.username}`)
+	} else {
+		socket.emit('get_username', gameConfig.userId, (username: string) => {
+			gameConfig.username = username
+			Log.debug(`recv: username: ${username}`)
+		})
 	}
+
 	redis.publish(RedisData.CHANNEL.STATE, { connected: gameConfig.username })
 	joinGame()
 })
