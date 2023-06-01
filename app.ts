@@ -102,7 +102,6 @@ let redis = new Redis(redisConfig)
 // socket.io setup
 let socket = io(gameConfig.GAME_SERVER_URL, {
 	rejectUnauthorized: false,
-	transports: ['websocket']
 })
 
 socket.on("error", (error: Error) => console.error('[socket.io]', error))
