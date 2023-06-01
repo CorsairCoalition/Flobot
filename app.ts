@@ -9,7 +9,6 @@ import { Log } from './utils.js'
 import crypto from 'crypto'
 
 // configuration
-
 const BOT_TYPE = 'flobot'
 const packageJsonPath = new URL('../package.json', import.meta.url)
 const pkg = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'))
@@ -280,7 +279,7 @@ function joinGame() {
 			})
 			break
 		case Game.Type.CUSTOM:
-			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId)
+			socket.emit('join_private', gameConfig.customGameId, gameConfig.userId, process.env['AUTH_TOKEN'])
 			setTimeout(setCustomOptions, 100)
 			setTimeout(setForceStart, 2000)
 			Log.stdout(`[joined] custom: ${gameConfig.customGameId}`)

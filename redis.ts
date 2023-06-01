@@ -8,27 +8,34 @@ export default class Redis {
 	private publisher: RedisClientType
 	private subscriber: RedisClientType
 	private CHANNEL_PREFIX: string
-	private EXPIRATION_TIME = 60 * 60 * 24 * 14 // default 2 weeks
+	private EXPIRATION_TIME = 60 * 60 * 24 * 365
 	private gameKeyspace: string
 
 	constructor(redisConfig: Config.Redis) {
+		Log.debug(`[Redis] Initializing Redis: ${process.env['REDIS_HOST'] || redisConfig.HOST}`)
 		this.CHANNEL_PREFIX = redisConfig.CHANNEL_PREFIX
 		this.EXPIRATION_TIME = redisConfig.EXPIRATION_TIME || this.EXPIRATION_TIME
 		this.subscriber = createClient({
-			url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:${redisConfig.PORT}`,
+			username: process.env['REDIS_USERNAME'] || redisConfig.USERNAME,
+			password: process.env['REDIS_PASSWORD'] || redisConfig.PASSWORD,
 			socket: {
-				tls: true,
-				servername: redisConfig.HOST,
+				host: process.env['REDIS_HOST'] || redisConfig.HOST,
+				port: parseInt(process.env['REDIS_PORT']) || redisConfig.PORT,
+				tls: redisConfig.TLS,
+				servername: process.env['REDIS_HOST'] || redisConfig.HOST,
 			}
 		})
 		this.subscriber.on('error', (error: Error) => Log.stderr(`[Redis] {error}`))
 		this.subscriber.connect()
 
 		this.publisher = createClient({
-			url: `rediss://${redisConfig.USERNAME}:${redisConfig.PASSWORD}@${redisConfig.HOST}:${redisConfig.PORT}`,
+			username: process.env['REDIS_USERNAME'] || redisConfig.USERNAME,
+			password: process.env['REDIS_PASSWORD'] || redisConfig.PASSWORD,
 			socket: {
-				tls: true,
-				servername: redisConfig.HOST,
+				host: process.env['REDIS_HOST'] || redisConfig.HOST,
+				port: parseInt(process.env['REDIS_PORT']) || redisConfig.PORT,
+				tls: redisConfig.TLS,
+				servername: process.env['REDIS_HOST'] || redisConfig.HOST,
 			}
 		})
 		this.publisher.on('error', (error: Error) => Log.stderr(`[Redis] ${error}`))
