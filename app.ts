@@ -3,7 +3,7 @@
 import { Command } from 'commander'
 import Redis from './redis.js'
 import io from 'socket.io-client'
-import fs from 'node:fs'
+import fs from 'node:fs/promises'
 import Bot from './scripts/bot.js'
 import { Log } from './utils.js'
 import crypto from 'crypto'
@@ -11,15 +11,12 @@ import crypto from 'crypto'
 // configuration
 
 const BOT_TYPE = 'flobot'
+const packageJsonPath = new URL('../package.json', import.meta.url)
+const pkg = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'))
 
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
-const config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
-const gameConfig: Config.Game = config.gameConfig
-const redisConfig: Config.Redis = config.redisConfig
-// create a unique botId by hashing gameConfig.userId
-let botId = crypto.createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
-gameConfig.customGameSpeed = gameConfig.customGameSpeed || 4
-redisConfig.CHANNEL_PREFIX = BOT_TYPE + '-' + botId
+let gameConfig: Config.Game
+let redisConfig: Config.Redis
+let botId: string
 
 // program flow setup
 process.once('SIGINT', async (code) => {
@@ -43,7 +40,7 @@ process.once('SIGTERM', async (code) => {
 })
 
 // data structures and definitions
-let gameType: Game.Type
+const gameType: Game.Type = Game.Type.CUSTOM
 let bot: Bot
 let playerIndex: number
 let replay_id: string = ""
@@ -59,35 +56,27 @@ program
 	.description(pkg.description)
 	.option('-n, --number-of-games <number>', 'number of games to play', '1')
 	.option('-d, --debug', 'enable debugging', false)
-	.option('-s, --set-username', `attempt to set username: ${gameConfig.username}`, false)
+	.option('-s, --set-username', `attempt to set username from config file`, false)
+	.arguments('<configFile>')
 	.showHelpAfterError()
+	.action(run)
 
-program
-	.command(Game.Type.FFA)
-	.description('free for all')
-	.action(() => {
-		gameType = Game.Type.FFA
-		gameConfig.customGameId = null
-	})
+async function run(configFile: string) {
+	// read and process command line options
+	const config = JSON.parse(await fs.readFile(configFile, 'utf8'))
+	gameConfig = config.gameConfig
+	redisConfig = config.redisConfig
 
-program
-	.command(Game.Type.DUEL)
-	.description('one vs one')
-	.action(() => { gameType = Game.Type.DUEL })
+	// create a unique botId by hashing gameConfig.userId
+	botId = BOT_TYPE + '-' + crypto.createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
+	redisConfig.CHANNEL_PREFIX = botId
 
-program
-	.command(Game.Type.CUSTOM)
-	.argument('[id]', 'custom game id', gameConfig.customGameId)
-	.description('custom game')
-	.action((id) => {
-		gameType = Game.Type.CUSTOM
-		gameConfig.customGameId = id
-	})
+	gameConfig.customGameSpeed = gameConfig.customGameSpeed || 4
+}
 
-program.parse()
+await program.parseAsync()
 const options = program.opts()
 options.numberOfGames = parseInt(options.numberOfGames) || 1
-options.effectiveness = parseInt(options.effectiveness) || 100
 
 Log.stdout(`[initilizing] ${pkg.name} v${pkg.version}`)
 Log.stdout(`[initilizing] botId: ${botId}`)
