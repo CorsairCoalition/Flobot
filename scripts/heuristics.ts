@@ -1,12 +1,15 @@
 /// <reference path="../app.d.ts" />
 
+import type GameMap from "./gameMap.js"
+import type GameState from "./gameState.js"
+
 export default class Heuristics {
 
 	//TODO: choose by manhatten distance, not breadth search distance
 	//returns the furthest possible tile index from the general, with maximum distance to edge
 	//tiles are arrays of Objects with index and generalDistance properties
-	static chooseDiscoverTile(gameState, gameMap, tiles) {
-		let generalCoords = gameMap.getCoordinatesFromTileIndex(gameState.ownGeneral);
+	static chooseDiscoverTile(gameMap: GameMap, tiles: {index: number, generalDistance: number}[]) {
+		// let generalCoords = gameMap.getCoordinatesFromTileIndex(gameState.ownGeneral);
 
 		let optimalTile = {"index": -1, "edgeWeight": -1};
 
@@ -34,11 +37,12 @@ export default class Heuristics {
 			return optimalTile.index;
 		} else {
 			console.log("No tile found. Something is going wrong here!");
+			return null
 		}
 	}
 
 	//find an enemy tile adjcaent to fog with a minimum army value
-	static chooseEnemyTargetTileByLowestArmy(gameState, gameMap) {
+	static chooseEnemyTargetTileByLowestArmy(gameState: GameState, gameMap: GameMap) {
 		let tilesWithFog = [];
 
 		//loop through all visible enemy tiles
@@ -68,5 +72,6 @@ export default class Heuristics {
 			//tile belonds to enemy
 			return 3;
 		}
+		return 1
 	}
 }

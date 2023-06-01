@@ -1,19 +1,18 @@
 {
+    "extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
 		"module": "ES2022",
 		"target": "ES2022",
+		"allowJs": true,
+		"strict": false,
 		"removeComments": true,
-		"preserveConstEnums": true,
-		"moduleResolution": "node",
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"outDir": "out",
-		"allowJs": true
+		"sourceMap": true,
+		"outDir": "out"
 	},
 	"include": ["**/*.ts"],
 	"exclude": [
 		"node_modules",
+		"out",
 		"**/*.spec.ts"
 	],
 	"$schema": "https://json.schemastore.org/tsconfig"

@@ -25,7 +25,7 @@ export default class Redis {
 				servername: process.env['REDIS_HOST'] || redisConfig.HOST,
 			}
 		})
-		this.subscriber.on('error', (error: Error) => Log.stderr(`[Redis] {error}`))
+		this.subscriber.on('error', (error: Error) => Log.stderr(`[Redis] ${error}`))
 		this.subscriber.connect()
 
 		this.publisher = createClient({

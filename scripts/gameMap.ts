@@ -1,5 +1,7 @@
 /// <reference path="../app.d.ts" />
 
+import type GameState from "./gameState.js";
+
 export default class GameMap {
 
 	width: number;
@@ -7,7 +9,7 @@ export default class GameMap {
 	size: number;
 	playerIndex: number;
 
-	constructor(width, height, playerIndex, generals) {
+	constructor(width: number, height: number, playerIndex: number) {
 		this.width = width;
 		this.height = height;
 		this.size = width * height;
@@ -15,14 +17,14 @@ export default class GameMap {
 	}
 
 	//needs a tile object with index and value field
-	isWalkable(gameState, tile) {
+	isWalkable(gameState: GameState, tile: GeneralsIO.Tile) {
 		return tile.value !== GeneralsIO.TILE.FOG_OBSTACLE &&
 			tile.value !== GeneralsIO.TILE.OFF_LIMITS &&
 			tile.value !== GeneralsIO.TILE.MOUNTAIN &&
 			!this.isCity(gameState, tile);
 	}
 
-	isCity(gameState, tile) {
+	isCity(gameState: GameState, tile: GeneralsIO.Tile) {
 		return gameState.cities.indexOf(tile.index) >= 0;
 	}
 
@@ -30,7 +32,7 @@ export default class GameMap {
 		return gameState.terrain[index] >= 0 && gameState.terrain[index] != this.playerIndex;
 	}
 
-	getAdjacentTiles(gameState, index) {
+	getAdjacentTiles(gameState: GameState, index: number) {
 		let up = this.getAdjacentTile(gameState, index, -this.width);
 		let right = this.getAdjacentTile(gameState, index, 1);
 		let down = this.getAdjacentTile(gameState, index, this.width);
@@ -40,7 +42,7 @@ export default class GameMap {
 		};
 	}
 
-	getAdjacentTile(gameState, index, distance) {
+	getAdjacentTile(gameState: GameState, index: number, distance: number): GeneralsIO.Tile {
 		let adjacentIndex = index + distance;
 		let curRow = Math.floor(index / this.width);
 		let adjacentRow = Math.floor(adjacentIndex / this.width);

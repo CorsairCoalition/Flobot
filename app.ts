@@ -18,23 +18,23 @@ let redisConfig: Config.Redis
 let botId: string
 
 // program flow setup
-process.once('SIGINT', async (code) => {
+process.once('SIGINT', async () => {
 	Log.stderr('Interrupted. Exiting gracefully.')
 	if (gameJoined) {
-		await socket.emit('leave_game')
+		socket.emit('leave_game')
 		Log.debug('sent: leave_game')
 	}
-	await socket.disconnect()
+	socket.disconnect()
 	await redis.quit()
 })
 
-process.once('SIGTERM', async (code) => {
+process.once('SIGTERM', async () => {
 	Log.stderr('Terminated. Exiting gracefully.')
 	if (gameJoined) {
 		socket.emit('leave_game')
 		Log.debug('sent: leave_game')
 	}
-	await socket.disconnect()
+	socket.disconnect()
 	await redis.quit()
 })
 
@@ -75,12 +75,12 @@ async function run(configFile: string) {
 
 await program.parseAsync()
 const options = program.opts()
-options.numberOfGames = parseInt(options.numberOfGames) || 1
+options['numberOfGames'] = parseInt(options['numberOfGames']) || 1
 
 Log.stdout(`[initilizing] ${pkg.name} v${pkg.version}`)
 Log.stdout(`[initilizing] botId: ${botId}`)
 
-Log.setDebugOutput(options.debug)
+Log.setDebugOutput(options['debug'])
 Log.debug("[debug] debugging enabled")
 Log.debugObject("gameConfig", gameConfig)
 Log.debugObject("options", options)
@@ -103,7 +103,7 @@ socket.on("gio_error", (message: string) => {
 // handle game events
 socket.on('connect', async () => {
 	Log.stdout(`[connected] ${gameConfig.username}`)
-	if (options.setUsername) {
+	if (options['setUsername']) {
 		socket.emit('set_username', gameConfig.userId, gameConfig.username)
 		Log.debug(`sent: set_username, ${gameConfig.userId}, ${gameConfig.username}`)
 	} else {
@@ -202,7 +202,7 @@ socket.on('game_update', (data: GeneralsIO.GameUpdate) => {
 
 	let maxArmyOnTile = 0
 	// get the max value from this.gameState.ownTiles
-	for (let [key, value] of bot.gameState.ownTiles) {
+	for (let [, value] of bot.gameState.ownTiles) {
 		if (value > maxArmyOnTile) {
 			maxArmyOnTile = value
 		}
@@ -257,7 +257,7 @@ socket.on('queue_update', (data) => {
 
 function joinGame() {
 	currentGameNumber++
-	Log.stdout(`[joining] game ${currentGameNumber} of ${options.numberOfGames}`)
+	Log.stdout(`[joining] game ${currentGameNumber} of ${options['numberOfGames']}`)
 
 	switch (gameType) {
 		case Game.Type.FFA:
@@ -303,8 +303,8 @@ function leaveGame() {
 	bot = undefined
 
 	// if we have played enough games, exit
-	if (currentGameNumber >= options.numberOfGames) {
-		Log.stdout(`Played ${options.numberOfGames} games. Exiting.`)
+	if (currentGameNumber >= options['numberOfGames']) {
+		Log.stdout(`Played ${options['numberOfGames']} games. Exiting.`)
 		socket.close()
 	}
 	else {
