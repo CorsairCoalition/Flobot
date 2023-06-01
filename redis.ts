@@ -5,39 +5,32 @@ import { Log } from './utils.js'
 
 export default class Redis {
 
-	private publisher: RedisClientType
-	private subscriber: RedisClientType
-	private CHANNEL_PREFIX: string
-	private EXPIRATION_TIME = 60 * 60 * 24 * 365
+	private readonly publisher: RedisClientType
+	private readonly subscriber: RedisClientType
+	private readonly CHANNEL_PREFIX: string
+	private readonly EXPIRATION_TIME = 60 * 60 * 24 * 365 // default 1 year
 	private gameKeyspace: string
 
 	constructor(redisConfig: Config.Redis) {
-		Log.debug(`[Redis] Initializing Redis: ${process.env['REDIS_HOST'] || redisConfig.HOST}`)
+		Log.debug(`[Redis] Initializing Redis: ${redisConfig.HOST}`)
 		this.CHANNEL_PREFIX = redisConfig.CHANNEL_PREFIX
 		this.EXPIRATION_TIME = redisConfig.EXPIRATION_TIME || this.EXPIRATION_TIME
-		this.subscriber = createClient({
-			username: process.env['REDIS_USERNAME'] || redisConfig.USERNAME,
-			password: process.env['REDIS_PASSWORD'] || redisConfig.PASSWORD,
+		let clientConfig = {
+			username: redisConfig.USERNAME,
+			password: redisConfig.PASSWORD,
 			socket: {
-				host: process.env['REDIS_HOST'] || redisConfig.HOST,
-				port: parseInt(process.env['REDIS_PORT']) || redisConfig.PORT,
+				host: redisConfig.HOST,
+				port: redisConfig.PORT,
 				tls: redisConfig.TLS,
-				servername: process.env['REDIS_HOST'] || redisConfig.HOST,
+				servername: redisConfig.HOST,
 			}
-		})
+		}
+
+		this.subscriber = createClient(clientConfig)
 		this.subscriber.on('error', (error: Error) => Log.stderr(`[Redis] ${error}`))
 		this.subscriber.connect()
 
-		this.publisher = createClient({
-			username: process.env['REDIS_USERNAME'] || redisConfig.USERNAME,
-			password: process.env['REDIS_PASSWORD'] || redisConfig.PASSWORD,
-			socket: {
-				host: process.env['REDIS_HOST'] || redisConfig.HOST,
-				port: parseInt(process.env['REDIS_PORT']) || redisConfig.PORT,
-				tls: redisConfig.TLS,
-				servername: process.env['REDIS_HOST'] || redisConfig.HOST,
-			}
-		})
+		this.publisher = createClient(clientConfig)
 		this.publisher.on('error', (error: Error) => Log.stderr(`[Redis] ${error}`))
 		this.publisher.connect()
 	}

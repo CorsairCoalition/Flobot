@@ -70,6 +70,12 @@ async function run(configFile: string) {
 	botId = BOT_TYPE + '-' + crypto.createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
 	redisConfig.CHANNEL_PREFIX = botId
 
+	redisConfig.USERNAME = process.env['REDIS_USERNAME'] || redisConfig.USERNAME
+	redisConfig.PASSWORD = process.env['REDIS_PASSWORD'] || redisConfig.PASSWORD
+	redisConfig.HOST = process.env['REDIS_HOST'] || redisConfig.HOST
+	redisConfig.PORT = parseInt(process.env['REDIS_PORT']) || redisConfig.PORT
+	redisConfig.TLS = process.env['REDIS_TLS'] === 'true' || redisConfig.TLS
+
 	gameConfig.customGameSpeed = gameConfig.customGameSpeed || 4
 }
 
