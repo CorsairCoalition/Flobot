@@ -93,8 +93,18 @@ export default class Redis {
 		return CHANNEL_NAME
 	}
 
-	public quit() {
-		this.subscriber.quit()
-		return this.publisher.quit()
+	public async quit() {
+		let promises = []
+		if (this.subscriber.isReady) {
+			Log.stdout('Closing Redis subscriber...')
+			promises.push(this.subscriber.quit())
+		}
+		if (this.publisher.isReady) {
+			Log.stdout('Closing Redis publisher...')
+			promises.push(this.publisher.quit())
+		}
+		return Promise.all(promises).then(() => {
+			Log.stdout('Redis connection closed.')
+		})
 	}
 }

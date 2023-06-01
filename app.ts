@@ -24,8 +24,9 @@ process.once('SIGINT', async () => {
 		socket.emit('leave_game')
 		Log.debug('sent: leave_game')
 	}
-	socket.disconnect()
-	await redis.quit()
+	socket.disconnect().once('disconnect', () => {
+		redis.quit()
+	})
 })
 
 process.once('SIGTERM', async () => {
@@ -34,8 +35,9 @@ process.once('SIGTERM', async () => {
 		socket.emit('leave_game')
 		Log.debug('sent: leave_game')
 	}
-	socket.disconnect()
-	await redis.quit()
+	socket.disconnect().once('disconnect', () => {
+		redis.quit()
+	})
 })
 
 // data structures and definitions
