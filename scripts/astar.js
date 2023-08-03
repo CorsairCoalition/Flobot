@@ -1,4 +1,4 @@
-import Heap from 'code42day-binary-heap'
+import Heap from 'sterta'
 
 export default class AStar {
 	static init(gameState, gameMap) {
