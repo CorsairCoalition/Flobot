@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /// <reference path="./app.d.ts" />
 
 import { Command } from 'commander'

@@ -1,6 +1,6 @@
 {
   "name": "@corsaircoalition/flobot",
-  "version": "5.1.0",
+  "version": "5.1.1",
   "description": "reference bot implementation for generals.io using a combination of heuristics and graph algorithms",
   "main": "out/app.js",
   "type": "module",
