@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 
-/// <reference path="./app.d.ts" />
-
 import { Command } from 'commander'
-import Redis from './redis.js'
 import io from 'socket.io-client'
 import fs from 'node:fs/promises'
 import Bot from './scripts/bot.js'
-import { Log } from './utils.js'
-import crypto from 'crypto'
+import { Log, Redis, hashUserId } from '@corsaircoalition/common'
 
 // configuration
-const BOT_TYPE = 'flobot'
 const packageJsonPath = new URL('../package.json', import.meta.url)
 const pkg = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'))
 
@@ -26,8 +21,8 @@ process.once('SIGINT', async () => {
 		socket.emit('leave_game')
 		Log.debug('sent: leave_game')
 	}
-	socket.disconnect().once('disconnect', () => {
-		redis.quit()
+	socket.disconnect().once('disconnect', async () => {
+		await Redis.quit()
 	})
 })
 
@@ -37,8 +32,8 @@ process.once('SIGTERM', async () => {
 		socket.emit('leave_game')
 		Log.debug('sent: leave_game')
 	}
-	socket.disconnect().once('disconnect', () => {
-		redis.quit()
+	socket.disconnect().once('disconnect', async () => {
+		await Redis.quit()
 	})
 })
 
@@ -70,7 +65,7 @@ async function run(configFile: string) {
 	redisConfig = config.redisConfig
 
 	// create a unique botId by hashing gameConfig.userId
-	botId = BOT_TYPE + '-' + crypto.createHash('sha256').update(gameConfig.userId).digest('base64').replace(/[^\w\s]/gi, '').slice(-7)
+	botId = gameConfig.BOT_ID_PREFIX + '-' + hashUserId(gameConfig.userId)
 	redisConfig.CHANNEL_PREFIX = botId
 
 	redisConfig.USERNAME = process.env['REDIS_USERNAME'] || redisConfig.USERNAME
@@ -89,12 +84,12 @@ options['numberOfGames'] = parseInt(options['numberOfGames']) || 1
 Log.stdout(`[initilizing] ${pkg.name} v${pkg.version}`)
 Log.stdout(`[initilizing] botId: ${botId}`)
 
-Log.setDebugOutput(options['debug'])
+Log.enableDebugOutput(options['debug'])
 Log.debug("[debug] debugging enabled")
 Log.debugObject("gameConfig", gameConfig)
 Log.debugObject("options", options)
 
-let redis = new Redis(redisConfig)
+Redis.initilize(redisConfig)
 
 // socket.io setup
 let socket = io(gameConfig.GAME_SERVER_URL, {
@@ -115,7 +110,7 @@ socket.on('connect', async () => {
 	socket.emit('get_username', gameConfig.userId, (username: string) => {
 		Log.debug(`recv: username: ${username}`)
 		Log.stdout(`[connected] username: ${username}`)
-		redis.publish(RedisData.CHANNEL.STATE, { connected: username })
+		Redis.publish(botId, RedisData.CHANNEL.STATE, { connected: username })
 
 		if (username !== gameConfig.username) {
 			// attempt to change username; it will take effect next time bot is started
@@ -131,16 +126,14 @@ socket.on('connect', async () => {
 
 socket.on('disconnect', async (reason: string) => {
 	// exit if disconnected intentionally; auto-reconnect otherwise
-	await redis.publish(RedisData.CHANNEL.STATE, { disconnected: reason })
+	await Redis.publish(botId, RedisData.CHANNEL.STATE, { disconnected: reason })
 	switch (reason) {
 		case 'io server disconnect':
 			console.error("disconnected: " + reason)
-			if (redis !== undefined)
-				await redis.quit()
+			await Redis.quit()
 			process.exit(3)
 		case 'io client disconnect':
-			if (redis !== undefined)
-				await redis.quit()
+			await Redis.quit()
 			process.exit(0)
 		default:
 			console.error("disconnected: " + reason)
@@ -155,6 +148,8 @@ socket.on('error_set_username', (message: string) => {
 	}
 })
 
+let keyspace: string
+
 socket.on('game_start', (data: GeneralsIO.GameStart) => {
 	// Get ready to start playing the game.
 	playerIndex = data.playerIndex
@@ -162,9 +157,10 @@ socket.on('game_start', (data: GeneralsIO.GameStart) => {
 	replay_id = data.replay_id
 	usernames = data.usernames
 	Log.stdout(`[game_start] replay: ${replay_id}, users: ${usernames}`)
-	redis.publish(RedisData.CHANNEL.STATE, { game_start: data })
-	redis.setKeyspaceName(data.replay_id)
-	redis.setKeys(data)
+	Redis.publish(botId, RedisData.CHANNEL.STATE, { game_start: data })
+
+	keyspace = `${botId}-${data.replay_id}`
+	Redis.setKeys(keyspace, data)
 
 	// iterate over gameConfig.warCry to send chat messages
 	function later(delay: number) {
@@ -189,10 +185,10 @@ socket.on('game_update', (data: GeneralsIO.GameUpdate) => {
 	} else {
 		bot.update(data)
 	}
-	redis.publish(RedisData.CHANNEL.GAME_UPDATE, data)
+	Redis.publish(botId, RedisData.CHANNEL.GAME_UPDATE, data)
 
 	if (data.turn === 1) {
-		redis.setKeys({
+		Redis.setKeys(keyspace, {
 			[RedisData.KEY.WIDTH]: bot.gameState.width,
 			[RedisData.KEY.HEIGHT]: bot.gameState.height,
 			[RedisData.KEY.SIZE]: bot.gameState.size,
@@ -200,7 +196,7 @@ socket.on('game_update', (data: GeneralsIO.GameUpdate) => {
 		})
 	}
 
-	redis.setKeys({
+	Redis.setKeys(keyspace, {
 		[RedisData.KEY.TURN]: bot.gameState.turn,
 		[RedisData.KEY.CITIES]: bot.gameState.cities,
 		[RedisData.KEY.DISCOVERED_TILES]: bot.gameState.discoveredTiles,
@@ -219,14 +215,14 @@ socket.on('game_update', (data: GeneralsIO.GameUpdate) => {
 		}
 	}
 
-	redis.listPush(RedisData.LIST.SCORES, data.scores)
-	redis.listPush(RedisData.LIST.MAX_ARMY_ON_TILE, maxArmyOnTile)
-	redis.listPush(RedisData.LIST.MOVE_COUNT, bot.moveCount)
+	Redis.listPush(keyspace, RedisData.LIST.SCORES, data.scores)
+	Redis.listPush(keyspace, RedisData.LIST.MAX_ARMY_ON_TILE, maxArmyOnTile)
+	Redis.listPush(keyspace, RedisData.LIST.MOVE_COUNT, bot.moveCount)
 })
 
 socket.on('game_lost', (data: { killer: string }) => {
 	Log.stdout(`[game_lost] ${replay_id}, killer: ${usernames[data.killer]}`)
-	redis.publish(RedisData.CHANNEL.STATE, {
+	Redis.publish(botId, RedisData.CHANNEL.STATE, {
 		game_lost: {
 			replay_id: replay_id,
 			killer: data.killer,
@@ -238,7 +234,7 @@ socket.on('game_lost', (data: { killer: string }) => {
 
 socket.on('game_won', () => {
 	Log.stdout(`[game_won] ${replay_id}`)
-	redis.publish(RedisData.CHANNEL.STATE, {
+	Redis.publish(botId, RedisData.CHANNEL.STATE, {
 		game_won: {
 			replay_id: replay_id
 		}
@@ -274,7 +270,7 @@ function joinGame() {
 		case Game.Type.FFA:
 			socket.emit('play', gameConfig.userId)
 			Log.stdout('[joined] FFA')
-			redis.publish(RedisData.CHANNEL.STATE, {
+			Redis.publish(botId, RedisData.CHANNEL.STATE, {
 				joined: {
 					gameType: 'FFA',
 				}
@@ -283,7 +279,7 @@ function joinGame() {
 		case Game.Type.DUEL:
 			socket.emit('join_1v1', gameConfig.userId)
 			Log.stdout('[joined] 1v1')
-			redis.publish(RedisData.CHANNEL.STATE, {
+			Redis.publish(botId, RedisData.CHANNEL.STATE, {
 				joined: {
 					gameType: '1v1',
 				}
@@ -294,7 +290,7 @@ function joinGame() {
 			setTimeout(setCustomOptions, 100)
 			setTimeout(setForceStart, 2000)
 			Log.stdout(`[joined] custom: ${gameConfig.customGameId}`)
-			redis.publish(RedisData.CHANNEL.STATE, {
+			Redis.publish(botId, RedisData.CHANNEL.STATE, {
 				joined: {
 					gameType: 'custom',
 					gameId: gameConfig.customGameId,

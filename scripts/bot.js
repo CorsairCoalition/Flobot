@@ -1,7 +1,7 @@
 import GameState from './gameState.js'
 import GameMap from './gameMap.js'
 import Strategy from './strategy.js'
-import { Log, later, random } from '../utils.js'
+import { Log, later, random } from '@corsaircoalition/common'
 
 export default class Bot {
 

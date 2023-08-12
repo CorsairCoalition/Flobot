@@ -1,5 +1,3 @@
-/// <reference path="../app.d.ts" />
-
 import type GameMap from "./gameMap.js"
 import type GameState from "./gameState.js"
 

@@ -1,5 +1,3 @@
-/// <reference path="../app.d.ts" />
-
 import type GameState from "./gameState.js";
 
 export default class GameMap {
