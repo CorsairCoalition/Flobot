@@ -2,39 +2,45 @@
 
 [generals.io](https://generals.io/) is a fast-paced strategy game where you expand your land and battle with enemies over theirs. You lose when your general is taken, but capturing an opponent's general gives you control of their entire empire.
 
-This bot is an AI agent that competes on the [generals.io bot server](https://bot.generals.io/).
+This bot is an AI agent that competes on the [generals.io bot server](https://bot.generals.io/). It is used to provide a consistent adversary while testing other bots.
 
-See [developer documentation](https://dev.generals.io/).
-
-## Build
-
-```sh
-$ npm clean-install # install required packages
-$ npm run build # compile app.ts to app.js
-```
+See [Generally Genius](https://corsaircoalition.github.io/) (GG) framework to develop your own bot!
 
 ## Configuration
 
-Copy `config.json.example` to `config.json` and make updates.
+Download `config.example.json` from the [documentation repository](https://github.com/CorsairCoalition/docs) and make desired changes.
 
-1. Change `userId` to a random string.
-2. Change `username` to the bot's name. According to the developer documentation, bot names must start with `[Bot]`.
-3. On first run, use the `--set-username` flag to set the desired username. This flag is not required for subsequent runs.
+## Execution
+
+Install and run the executable:
+
+```sh
+npm install -g @corsaircoalition/flobot
+flobot config.json
+```
+
+or run directly from npm library:
+
+```sh
+npx @corsaircoalition/flobot config.json
+```
+
+or use docker:
+
+```sh
+docker run -it -v ./config.json:/config.json ghcr.io/corsaircoalition/flobot:latest
+```
 
 ## Usage
 
 ```
-	Usage: node app.js [options] [command]
+Usage: @corsaircoalition/flobot [options] <configFile>
 
-	Options:
-	-V, --version          output the version number
-	-n, --number <number>  number of games to play (default: 3)
-	-d, --debug            enable debugging (default: false)
-	-s, --set-username     attempt to set username: [Bot] Floatbot (default: false)
-	-h, --help             display help for command
+reference bot implementation for generals.io using a combination of heuristics and graph algorithms
 
-	Commands:
-	ffa                    free for all
-	1v1                    one vs one
-	custom [id]            custom game
+Options:
+  -V, --version                   output the version number
+  -n, --number-of-games <number>  number of games to play (default: "1")
+  -d, --debug                     enable debugging (default: false)
+  -h, --help                      display help for command
 ```
